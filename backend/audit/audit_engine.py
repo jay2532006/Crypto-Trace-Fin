@@ -7,6 +7,7 @@ and system actions. Every event is chained to the previous event via SHA-256 dig
 import os
 import sqlite3
 import hashlib
+import json
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 from backend.storage.raw_payload_storage import serialize_deterministically
@@ -163,6 +164,42 @@ class AuditEngine:
         conn.close()
         cols = ["event_id", "timestamp", "user_id", "action", "resource_id", "resource_type", "result", "details", "event_hash"]
         return [dict(zip(cols, [r[0], r[1], r[2], r[3], r[4], r[5], r[6], serialize_deterministically(r[7]), r[8]])) for r in rows]
+
+
+# Singleton instance
+    def get_all_events(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """Retrieves latest chronological audit events from the immutable ledger."""
+        conn = sqlite3.connect(self.db_path)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT id, event_id, timestamp, user_id, action, resource_id, resource_type, result, details_json, previous_event_hash, event_hash
+            FROM audit_events ORDER BY id DESC LIMIT ?
+        """, (limit,))
+        rows = cur.fetchall()
+        conn.close()
+
+        events = []
+        for r in rows:
+            details = {}
+            if r[8]:
+                try:
+                    details = json.loads(r[8])
+                except Exception:
+                    details = {"raw": r[8]}
+            events.append({
+                "id": r[0],
+                "event_id": r[1],
+                "timestamp": r[2],
+                "user_id": r[3],
+                "action": r[4],
+                "resource_id": r[5],
+                "resource_type": r[6],
+                "result": r[7],
+                "details": details,
+                "previous_event_hash": r[9],
+                "event_hash": r[10]
+            })
+        return events
 
 
 # Singleton instance

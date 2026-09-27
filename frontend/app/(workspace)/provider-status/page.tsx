@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 import {
   Server,
   Activity,
@@ -112,20 +113,49 @@ export default function ProviderStatusPage() {
   const [pinging, setPinging] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState<string>(new Date().toISOString());
 
-  const handlePingAll = () => {
+  const handlePingAll = async () => {
     setPinging(true);
-    setTimeout(() => {
+    try {
+      const res = await apiClient.get<any>('/api/test/apis');
+      const apiResults = res.data?.apis || {};
+
       setProviders((prev) =>
-        prev.map((p) => ({
-          ...p,
-          latency_ms: Math.max(2, Math.round(p.latency_ms * (0.85 + Math.random() * 0.3))),
-          last_checked: new Date().toISOString(),
-        }))
+        prev.map((p) => {
+          let testRes: any = null;
+          if (p.id === 'eth-mainnet' || p.chain === 'ETH') testRes = apiResults.etherscan;
+          else if (p.id === 'btc-esplora' || p.chain === 'BTC') testRes = apiResults.esplora;
+          else if (p.id === 'tron-grid' || p.chain === 'TRON') testRes = apiResults.trongrid;
+          else if (p.id === 'polygon-pos' || p.chain === 'POLYGON') testRes = apiResults.bitquery;
+          else if (p.id === 'ncrp-mesh' || p.chain === 'NCRP') testRes = apiResults.chainabuse;
+          else if (p.id === 'sahyog-boundary' || p.chain === 'SAHYOG') testRes = apiResults.ofac;
+
+          if (testRes) {
+            const isLive = testRes.status === 'LIVE' || testRes.status === 'HEALTHY' || testRes.status_code === 200;
+            return {
+              ...p,
+              operational: isLive,
+              status: (isLive ? 'ONLINE' : 'DEGRADED') as any,
+              latency_ms: Math.round(testRes.latency_ms || p.latency_ms),
+              last_checked: new Date().toISOString(),
+            };
+          }
+          return {
+            ...p,
+            last_checked: new Date().toISOString(),
+          };
+        })
       );
       setLastCheckTime(new Date().toISOString());
+    } catch (err) {
+      console.error('Failed to run live API diagnostics:', err);
+    } finally {
       setPinging(false);
-    }, 600);
+    }
   };
+
+  useEffect(() => {
+    handlePingAll();
+  }, []);
 
   const avgLatency = Math.round(
     providers.reduce((sum, p) => sum + p.latency_ms, 0) / providers.length

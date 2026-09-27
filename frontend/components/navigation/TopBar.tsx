@@ -10,26 +10,44 @@ import { apiClient } from "@/lib/api-client";
 export function TopBar() {
   const { session, setSession, logout } = useAuthStore();
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
-  const [prices, setPrices] = React.useState<{ btc?: number; eth?: number; usdt_inr?: number }>({
-    btc: 64200,
-    eth: 3450,
-    usdt_inr: 88.4,
+  const [prices, setPrices] = React.useState<{
+    btc?: number;
+    btc_inr?: number;
+    eth?: number;
+    eth_inr?: number;
+    usdt_inr?: number;
+    tron_inr?: number;
+  }>({
+    btc: 84426,
+    btc_inr: 8089753,
+    eth: 2686,
+    eth_inr: 257467,
+    usdt_inr: 95.8,
+    tron_inr: 31.98,
   });
 
   React.useEffect(() => {
-    // Fetch live prices from backend
-    apiClient
-      .get("/api/prices")
-      .then((res) => {
-        if (res.data) {
-          setPrices({
-            btc: res.data.btc?.usd || res.data.BTC || 64200,
-            eth: res.data.eth?.usd || res.data.ETH || 3450,
-            usdt_inr: res.data.usdt?.inr || res.data.USDT_INR || 88.4,
-          });
-        }
-      })
-      .catch(() => {});
+    const fetchPrices = () => {
+      apiClient
+        .get("/api/prices")
+        .then((res) => {
+          if (res.data) {
+            const data = res.data;
+            setPrices({
+              btc: data.BTC?.usd ?? data.btc?.usd ?? 84426,
+              btc_inr: data.BTC?.inr ?? data.btc?.inr ?? 8089753,
+              eth: data.ETH?.usd ?? data.eth?.usd ?? 2686,
+              eth_inr: data.ETH?.inr ?? data.eth?.inr ?? 257467,
+              usdt_inr: data.USDT?.inr ?? data.usdt?.inr ?? 95.8,
+              tron_inr: data.TRON?.inr ?? data.tron?.inr ?? 31.98,
+            });
+          }
+        })
+        .catch(() => {});
+    };
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSwitchPersona = async (username: string) => {

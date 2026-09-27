@@ -49,3 +49,9 @@ def verify_audit_chain():
     Validates cryptographic chained SHA-256 integrity across the entire audit log.
     """
     return audit_engine.verify_audit_chain()
+
+
+@router.get("/audit/events")
+def get_all_audit_events(limit: int = 100):
+    """Fetches chronological chained audit events across the platform."""
+    return audit_engine.get_all_events(limit=limit)

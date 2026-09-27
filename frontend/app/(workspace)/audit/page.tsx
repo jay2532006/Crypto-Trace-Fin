@@ -105,6 +105,17 @@ export default function AuditPage() {
   });
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const fetchAuditEvents = async () => {
+    try {
+      const res = await apiClient.get<AuditEventRecord[]>('/api/v1/audit/events');
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        setEvents(res.data);
+      }
+    } catch (e) {
+      // Fallback to seed log
+    }
+  };
+
   const fetchAuditChain = async () => {
     setVerifying(true);
     try {
@@ -114,6 +125,7 @@ export default function AuditPage() {
         total: resp.data.total_events || events.length,
         message: resp.data.message || 'All blocks mathematically chained and validated.',
       });
+      await fetchAuditEvents();
     } catch (err) {
       setTimeout(() => {
         setChainStatus({
@@ -127,6 +139,11 @@ export default function AuditPage() {
     }
     setVerifying(false);
   };
+
+  useEffect(() => {
+    fetchAuditChain();
+    fetchAuditEvents();
+  }, []);
 
   const filteredEvents = events.filter((e) => {
     const matchesAction = filterAction === 'ALL' || e.action.startsWith(filterAction);

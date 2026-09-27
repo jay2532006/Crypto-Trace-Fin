@@ -27,16 +27,18 @@ export default function DashboardPage() {
   const [cases, setCases] = React.useState<CaseRecord[]>([]);
   const [health, setHealth] = React.useState<any>(null);
   const [auditStatus, setAuditStatus] = React.useState<any>(null);
+  const [prices, setPrices] = React.useState<any>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     async function loadDashboardData() {
       setIsLoading(true);
       try {
-        const [casesRes, healthRes, auditRes] = await Promise.allSettled([
+        const [casesRes, healthRes, auditRes, priceRes] = await Promise.allSettled([
           apiClient.get<CaseRecord[]>("/api/v1/cases"),
           apiClient.get("/api/health"),
           apiClient.get("/api/v1/audit/verify-chain"),
+          apiClient.get("/api/prices"),
         ]);
 
         if (casesRes.status === "fulfilled") {
@@ -47,6 +49,9 @@ export default function DashboardPage() {
         }
         if (auditRes.status === "fulfilled") {
           setAuditStatus(auditRes.value.data);
+        }
+        if (priceRes.status === "fulfilled") {
+          setPrices(priceRes.value.data);
         }
       } finally {
         setIsLoading(false);
@@ -86,6 +91,44 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Live Crypto Spot Market Rates Banner */}
+      {prices && (
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-gradient-to-r from-navy-950 via-slate-900 to-navy-950 border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-mono">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-sans font-bold uppercase tracking-wider text-slate-400 text-[10px]">
+              Live CoinGecko Fiat Rates
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <span className="font-sans font-bold text-slate-400 text-[10px]">BTC:</span>
+              <span className="font-bold text-white">${prices.BTC?.usd?.toLocaleString() || '84,426'}</span>
+              <span className="text-emerald-400 text-[11px] font-sans font-semibold">?{prices.BTC?.inr ? (prices.BTC.inr / 100000).toFixed(2) + 'L' : '80.89L'}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="font-sans font-bold text-slate-400 text-[10px]">ETH:</span>
+              <span className="font-bold text-white">${prices.ETH?.usd?.toLocaleString() || '2,686'}</span>
+              <span className="text-emerald-400 text-[11px] font-sans font-semibold">?{prices.ETH?.inr ? (prices.ETH.inr / 1000).toFixed(1) + 'k' : '257.4k'}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="font-sans font-bold text-slate-400 text-[10px]">USDT:</span>
+              <span className="font-bold text-white">${prices.USDT?.usd?.toFixed(3) || '1.000'}</span>
+              <span className="text-emerald-400 text-[11px] font-sans font-semibold">?{prices.USDT?.inr?.toFixed(2) || '95.80'}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <span className="font-sans font-bold text-slate-400 text-[10px]">TRX:</span>
+              <span className="font-bold text-white">${prices.TRON?.usd?.toFixed(3) || '0.334'}</span>
+              <span className="text-emerald-400 text-[11px] font-sans font-semibold">?{prices.TRON?.inr?.toFixed(2) || '31.98'}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Primary KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

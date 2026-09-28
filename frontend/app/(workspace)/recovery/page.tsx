@@ -361,6 +361,57 @@ export default function RecoveryPage() {
 
         {/* 4 Factor Breakdown */}
         <div className="lg:col-span-7 space-y-4">
+          {/* Visual Factor Distribution Chart (Phase 7.2 Win Plan) */}
+          <Card className="p-4 bg-navy-950/80 border-navy-800">
+            <CardHeader className="p-0 pb-3">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center justify-between">
+                <span>Multi-Factor Urgency Distribution</span>
+                <span className="text-blue-400 font-mono text-[11px]">Composite: {isEligible ? totalRecoveryScore : 0}/100</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 space-y-3">
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400 flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-blue-400" /> Exchange Cooperation</span>
+                  <span className="font-mono font-bold text-blue-400">{isEligible ? cooperationScore : 0}/35 pts</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                  <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: `${isEligible ? (cooperationScore / 35) * 100 : 0}%` }} />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400 flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-amber-400" /> Time Urgency Decay ({elapsedHours}h)</span>
+                  <span className="font-mono font-bold text-amber-400">{isEligible ? timeScore : 0}/30 pts</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                  <div className="bg-amber-500 h-full rounded-full transition-all duration-500" style={{ width: `${isEligible ? (timeScore / 30) * 100 : 0}%` }} />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400 flex items-center gap-1.5"><GitCommit className="h-3.5 w-3.5 text-purple-400" /> Path Simplicity ({hopCount} hops)</span>
+                  <span className="font-mono font-bold text-purple-400">{isEligible ? hopScore : 0}/25 pts</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                  <div className="bg-purple-500 h-full rounded-full transition-all duration-500" style={{ width: `${isEligible ? (hopScore / 25) * 100 : 0}%` }} />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="text-slate-400 flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5 text-emerald-400" /> Attribution Confidence ({attributionConfidence})</span>
+                  <span className="font-mono font-bold text-emerald-400">{isEligible ? (attributionConfidence === "HIGH" ? 10 : 5) : 0}/10 pts</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${isEligible ? (attributionConfidence === "HIGH" ? 100 : 50) : 0}%` }} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="border-b border-navy-800 pb-3">
               <CardTitle className="text-sm font-bold tracking-wide">

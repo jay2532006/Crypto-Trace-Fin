@@ -51,16 +51,21 @@ export interface PatternFinding {
 
 export interface ScoringStep {
   step_name: string;
-  input_value: any;
-  weight: number;
-  contribution: number;
-  reasoning: string;
+  input_value?: any;
+  weight?: number;
+  contribution?: number;
+  reasoning?: string;
+  delta?: number;
+  subtotal?: number;
+  description?: string;
 }
 
 export interface AttributionScore {
+  vasp_key?: string;
   vasp_name: string;
   vasp_id: string;
   score: number;
+  confidence_score?: number;
   policy_version: string;
   label_type: LabelType;
   confidence_band: ConfidenceLevel;
@@ -96,6 +101,8 @@ export interface TraceResult {
   attribution?: AttributionScore;
   recovery?: RecoveryAssessment;
   recovery_estimate?: RecoveryAssessment;
+  ofac_sanction_hit?: boolean;
+  ofac_details?: any[];
   nearest_vasp?: string;
   risk_score?: number;
   risk_category?: string;
@@ -111,6 +118,52 @@ export interface TraceResult {
   timestamp?: string;
   execution_time_ms?: number;
   termination_reason?: string;
+  boundary_events?: Array<{
+    kind: string;
+    name: string;
+    address: string;
+    hop_number: number;
+    deposit_amount: number;
+    asset: string;
+    why_stopped: string;
+    search_window_seconds: number;
+  }>;
+  partial_recommendation?: {
+    boundary_type: string;
+    mixer_name: string;
+    mixer_address: string;
+    deposit_tx_hash?: string;
+    deposit_amount: number;
+    asset: string;
+    pre_mixer_freeze_targets: string[];
+    evidentiary_summary: string;
+    payout_candidates: Array<{
+      tx_hash: string;
+      recipient: string;
+      amount: number;
+      asset: string;
+      time_delta_seconds: number;
+      relationship_label: string;
+      confidence: number;
+      disclaimer: string;
+    }>;
+    off_chain_actions: string[];
+    disclaimer: string;
+  };
+  cross_chain_links?: Array<{
+    protocol: string;
+    from_chain: string;
+    to_chain: string;
+    from_addr: string;
+    to_addr: string;
+    amount_from: number;
+    amount_to: number;
+    time_delta_seconds: number;
+    link_type: LinkType;
+    confidence: ConfidenceLevel;
+    bridge_tx_hash?: string;
+    dest_tx_hash?: string;
+  }>;
 }
 
 export interface PreservationNoticeDraft {

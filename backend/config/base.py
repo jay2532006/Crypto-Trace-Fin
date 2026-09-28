@@ -51,6 +51,14 @@ class AppConfig(BaseModel):
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     AI_PRIMARY_PROVIDER: str = os.getenv("AI_PRIMARY_PROVIDER", "gemini")
 
+    # Feature Flags (Win Plan)
+    TRACE_OFAC_SANCTIONS: bool = os.getenv("TRACE_OFAC_SANCTIONS", "true").lower() == "true"
+    TRACE_STOP_AT_MIXER: bool = os.getenv("TRACE_STOP_AT_MIXER", "true").lower() == "true"
+    TRACE_CROSS_CHAIN: bool = os.getenv("TRACE_CROSS_CHAIN", "true").lower() == "true"
+    INTAKE_ENABLED: bool = os.getenv("INTAKE_ENABLED", "true").lower() == "true"
+    INTAKE_AUTOTRACE: bool = os.getenv("INTAKE_AUTOTRACE", "false").lower() == "true"
+    DEMO_SEED_ON_START: bool = os.getenv("DEMO_SEED_ON_START", "false").lower() == "true"
+
     # Security & Audit
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_HOURS: int = 8

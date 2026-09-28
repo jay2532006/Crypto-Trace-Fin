@@ -8,6 +8,7 @@ from backend.models.domain_models import PatternFinding
 from .rules.mule_network import mule_network_rule
 from .rules.mixer_boundary import mixer_boundary_rule
 from .rules.other_rules import peel_chain_rule, rapid_hop_rule
+from .rules.privacy_asset import privacy_asset_rule
 
 
 class TypologyEngine:
@@ -17,6 +18,7 @@ class TypologyEngine:
             mixer_boundary_rule,
             peel_chain_rule,
             rapid_hop_rule,
+            privacy_asset_rule,
         ]
 
     def detect_typologies(self, trace_result: Dict[str, Any], case_id: str) -> List[PatternFinding]:

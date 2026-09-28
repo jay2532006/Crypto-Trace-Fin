@@ -83,3 +83,62 @@ def get_case(case_id: str, current_user: Dict[str, Any] = Depends(get_current_us
 def list_fixtures():
     """Lists dedicated SIH 26183 evaluation test fixtures."""
     return get_crypto_trace_fixtures()
+
+@router.get("/cases/{case_id}/report.pdf")
+def download_case_report_pdf(case_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Generates and returns deterministic, court-admissible PDF forensic investigation report.
+    Guarded by RBAC and logged in immutable chained audit engine.
+    """
+    from fastapi.responses import Response
+    from backend.legal.report_generator import forensic_report_generator
+    from backend.tracing.trace_engine import bounded_tracer, TraceConstraints
+
+    case = db_manager.get_case(case_id)
+    if not case:
+        for fix in get_crypto_trace_fixtures():
+            if fix["case_id"] == case_id:
+                case = fix
+                break
+    if not case:
+        raise HTTPException(status_code=404, detail=f"Case '{case_id}' not found.")
+
+    wallet = case.get("suspect_wallet") or case.get("wallet") or ""
+    chain = case.get("chain", "ETH")
+    mode = "DEMO" if case.get("demo_data") else "LIVE"
+
+    trace_data = bounded_tracer.trace(
+        start_address=wallet,
+        chain=chain,
+        constraints=TraceConstraints(max_hops=4),
+        case_id=case_id,
+        mode=mode,
+    )
+
+    audit_head = audit_engine.verify_audit_chain().get("latest_hash")
+
+    pdf_bytes = forensic_report_generator.generate_report_pdf(
+        case=case,
+        trace=trace_data,
+        audit_head_hash=audit_head,
+        deterministic=True,
+    )
+
+    audit_engine.log_action(
+        user_id=current_user.get("username", "investigator1"),
+        action="report:generate_pdf",
+        resource_id=case_id,
+        resource_type="REPORT_PDF",
+        details={"case_id": case_id, "size_bytes": len(pdf_bytes)},
+    )
+
+    filename = f"Forensic_Report_{case_id}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-cache",
+        },
+    )
+

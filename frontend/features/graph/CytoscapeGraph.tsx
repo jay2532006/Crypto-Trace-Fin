@@ -50,19 +50,20 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
       let nodeBorderColor = '#60A5FA';
       let shape: cytoscape.Css.NodeShape = 'ellipse';
 
-      if (node.type === 'SUSPECT') {
+      const typeStr = (node.type || '').toUpperCase();
+      if (typeStr === 'SUSPECT') {
         nodeColor = '#DC2626'; // Red
         nodeBorderColor = '#F87171';
         shape = 'diamond';
-      } else if (node.type === 'VASP') {
+      } else if (typeStr === 'VASP') {
         nodeColor = '#1D4ED8'; // Dark Navy Blue
         nodeBorderColor = '#93C5FD';
         shape = 'round-rectangle';
-      } else if (node.type === 'MIXER') {
+      } else if (typeStr === 'MIXER') {
         nodeColor = '#D97706'; // Amber / Warning
-        nodeBorderColor = '#FCD34D';
+        nodeBorderColor = '#EF4444'; // Red terminal marker border
         shape = 'hexagon';
-      } else if (node.type === 'MULE') {
+      } else if (typeStr === 'MULE') {
         nodeColor = '#8B5CF6'; // Purple
         nodeBorderColor = '#C4B5FD';
         shape = 'ellipse';
@@ -93,12 +94,20 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
 
       let lineStyle: cytoscape.Css.LineStyle = 'solid';
       let lineColor = '#4B5563'; // Neutral gray
+      const isBridge = edge.edge_type === 'BRIDGE' || (edge as any).is_cross_chain || (edge as any).link_type === 'PROVEN';
+      const isHeuristicBridge = (edge as any).link_type === 'HEURISTIC_CORRELATION';
       if (isMixerBoundary) {
         lineStyle = 'dashed';
         lineColor = '#F59E0B'; // Amber dashed
       } else if (isPeel) {
         lineStyle = 'dashed';
         lineColor = '#8B5CF6'; // Purple dashed
+      } else if (isBridge) {
+        lineStyle = 'solid';
+        lineColor = '#06B6D4'; // Solid cyan for PROVEN bridge
+      } else if (isHeuristicBridge) {
+        lineStyle = 'dashed';
+        lineColor = '#94A3B8'; // Dashed grey for heuristic bridge
       }
 
       elements.push({

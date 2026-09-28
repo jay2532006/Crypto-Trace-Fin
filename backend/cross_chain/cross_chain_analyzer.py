@@ -20,6 +20,8 @@ class CrossChainAnalyzer:
         amount_to: float,
         time_delta_seconds: int,
         bridge_tx_hash: str = None,
+        bridge_protocol: str = "Across / LayerZero",
+        dest_tx_hash: str = None,
     ) -> CrossChainLink:
         """
         Classifies cross-chain relationship as PROVEN (if bridge TX hash is verified)
@@ -33,8 +35,9 @@ class CrossChainAnalyzer:
                 to_addr=to_addr,
                 link_type="PROVEN",
                 supporting_evidence={
-                    "bridge_protocol": "Across / LayerZero",
+                    "bridge_protocol": bridge_protocol,
                     "bridge_tx_hash": bridge_tx_hash,
+                    "dest_tx_hash": dest_tx_hash,
                     "source_amount": amount_from,
                     "dest_amount": amount_to,
                     "verification": "VERIFIED_ON_CHAIN_EVENT",

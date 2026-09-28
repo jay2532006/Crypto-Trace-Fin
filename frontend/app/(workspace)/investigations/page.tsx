@@ -29,6 +29,10 @@ import { HashDisplay } from '@/components/forensic/HashDisplay';
 import { UncertaintyBanner } from '@/components/forensic/UncertaintyBanner';
 import { CytoscapeGraph } from '@/features/graph/CytoscapeGraph';
 import { LiveOnChainInspector } from '@/components/forensic/LiveOnChainInspector';
+import { CopilotPanel } from "@/components/forensic/CopilotPanel";
+import { CaseSummaryCard } from '@/components/forensic/CaseSummaryCard';
+import { TimeToActionBanner } from '@/components/forensic/TimeToActionBanner';
+import { TraceBoundaryCard } from '@/components/forensic/TraceBoundaryCard';
 import { apiClient } from '@/lib/api-client';
 import { formatAddress, formatCrypto, formatINR, formatUSD, formatDateTime } from '@/lib/utils';
 import type { TraceResult, GraphNode, GraphEdge, HopNode } from '@/types/domain';
@@ -310,6 +314,35 @@ function InvestigationsContent() {
         </CardContent>
       </Card>
 
+      {/* OFAC Sanctions Nexus Alert Banner */}
+      {traceData?.ofac_sanction_hit && (
+        <div className="rounded-xl border-2 border-red-500/80 bg-red-950/60 p-4 shadow-2xl backdrop-blur">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-600/30 border border-red-500 text-red-400">
+              <AlertTriangle className="h-6 w-6 text-red-400 animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-red-400">
+                  STATUTORY SANCTIONS VIOLATION NEXUS DETECTED
+                </span>
+                <span className="rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                  OFAC SDN DESIGNATION
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-white mt-0.5">
+                Target Intersects Designated Specially Designated Nationals (SDN) Registry
+              </h4>
+              <p className="text-xs text-red-200/90 mt-1 leading-relaxed">
+                One or more traversed addresses match official US OFAC Sanctions records
+                {traceData.ofac_details?.[0]?.entity_name ? ` (${traceData.ofac_details[0].entity_name})` : ""}.
+                Mandatory Section 91 BNSS immediate preservation directive is in effect. All financial intermediaries are subject to statutory asset-freezing orders.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Uncertainty & Forensic Boundary Disclosures */}
       {hasMixer && (
         <UncertaintyBanner
@@ -324,6 +357,25 @@ function InvestigationsContent() {
           title="Mule Syndicate Velocity Pattern Detected"
           description="Funds traversed >= 3 intermediary wallets with high turnover within 60 minutes. Presumptive intermediary nodes have been flagged for cooperative Section 91 preservation."
         />
+      )}
+
+      {/* Win Plan Forensic Intelligence Cards (Phase 2 & Phase 5) */}
+      {traceData && (
+        <div className="space-y-4">
+          <TimeToActionBanner recovery={traceData.recovery_estimate || traceData.recovery} />
+          <TraceBoundaryCard 
+            boundaryEvents={traceData.boundary_events} 
+            partialRecommendation={traceData.partial_recommendation}
+            terminationReason={traceData.termination_reason}
+          />
+          <CaseSummaryCard 
+            attribution={traceData.attribution} 
+            hopDistance={traceData.hops?.length || 1} 
+            caseId={traceData.case_id} 
+            dataCompletenessPct={traceData.data_completeness_pct}
+          />
+          <CopilotPanel caseId={traceData.case_id || "CR-2026-CASE"} traceData={traceData} />
+        </div>
       )}
 
       {/* Trace Results & Metrics Deck */}

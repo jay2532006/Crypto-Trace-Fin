@@ -1,3 +1,4 @@
+from backend.adapters.bip39_validator import detect_private_key, detect_mnemonic
 """
 CryptoTrace LEA — Phase 4A NCRP Boundary Adapter
 Implements the National Cybercrime Reporting Portal (NCRP) boundary contract:
@@ -62,15 +63,13 @@ class NCRPAdapter:
         ])
 
         # 1. Private Key / Seed Phrase Detection & Rejection
-        if HEX_PRIVATE_KEY_PATTERN.search(raw_text):
+        if detect_private_key(raw_text):
             return {
                 "valid": False,
                 "error": "SECURITY VIOLATION: Potential 64-character private key detected in complaint narrative. Rejected for security compliance.",
             }
 
-        words = raw_text.lower().split()
-        bip39_matches = [w for w in words if MNEMONIC_PATTERN.match(w)]
-        if len(bip39_matches) >= 12:
+        if detect_mnemonic(raw_text, threshold=12):
             return {
                 "valid": False,
                 "error": "SECURITY VIOLATION: Potential 12/24-word seed phrase / mnemonic detected in complaint narrative. Rejected to protect victim credentials.",

@@ -1,3 +1,5 @@
+import json
+from backend.adapters.bip39_validator import detect_private_key, detect_mnemonic
 """
 CryptoTrace LEA — Phase 4A SAHYOG Boundary Adapter
 Implements the MHA/I4C SAHYOG Intelligence Sharing Boundary Contract:
@@ -74,15 +76,13 @@ class SAHYOGAdapter:
         ])
 
         # 1. Private Key / Seed Phrase Detection & Rejection
-        if HEX_PRIVATE_KEY_PATTERN.search(raw_text):
+        if detect_private_key(raw_text):
             return {
                 "valid": False,
                 "error": "SECURITY VIOLATION: Potential 64-character private key detected in bulletin text. Rejected for security compliance.",
             }
 
-        words = raw_text.lower().split()
-        bip39_matches = [w for w in words if MNEMONIC_PATTERN.match(w)]
-        if len(bip39_matches) >= 12:
+        if detect_mnemonic(raw_text, threshold=12):
             return {
                 "valid": False,
                 "error": "SECURITY VIOLATION: Potential seed phrase detected in bulletin text. Rejected to protect cryptographic credentials.",
@@ -140,10 +140,12 @@ class SAHYOGAdapter:
             )
             return {"status": "REJECTED", "reason": val["error"]}
 
-        # Deduplication check via content hash
-        bulletin_bytes = f"{val['bulletin_id']}:{val['agency']}:{len(val['wallets'])}".encode()
-        b_hash = hashlib.sha256(bulletin_bytes).hexdigest()
-        if b_hash in self.processed_bulletin_hashes:
+        # Deduplication check via content hash (persisted in canonical database)
+        bulletin_copy = {k: v for k, v in bulletin.items() if k not in ("ingested_at", "timestamp")}
+        b_hash = hashlib.sha256(json.dumps(bulletin_copy, sort_keys=True).encode("utf-8")).hexdigest()
+        legacy_hash = hashlib.sha256(f"{val['bulletin_id']}:{val['agency']}:{len(val['wallets'])}".encode()).hexdigest()
+
+        if canonical_db.check_intake_dedupe(b_hash) or b_hash in self.processed_bulletin_hashes or legacy_hash in self.processed_bulletin_hashes:
             return {
                 "status": "ALREADY_EXISTS",
                 "message": f"Bulletin {val['bulletin_id']} has already been processed.",
@@ -181,6 +183,8 @@ class SAHYOGAdapter:
             })
 
         self.processed_bulletin_hashes.add(b_hash)
+        self.processed_bulletin_hashes.add(legacy_hash)
+        canonical_db.record_intake_dedupe(b_hash, "SAHYOG", val["bulletin_id"])
 
         audit_engine.log_action(
             user_id=actor,

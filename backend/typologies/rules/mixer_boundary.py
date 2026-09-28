@@ -11,12 +11,7 @@ Enforces exact PRD parameters:
 from typing import Dict, Any, Optional
 from backend.models.domain_models import PatternFinding
 
-KNOWN_MIXERS = {
-    "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b": "Tornado Cash (Router)",
-    "0x47ce0c6ed5b0ce3d3a51fdb1c52dc66a7c3c2936": "Tornado Cash (0.1 ETH)",
-    "0x910cbd523d972eb0a6f4cae4618ad62622b39dbf": "Tornado Cash (1 ETH)",
-    "0xa160cdab225685da1d56aa342ad8841c3b53f291": "Tornado Cash (10 ETH)",
-}
+from backend.typologies.mixer_registry import KNOWN_MIXERS, get_mixer_info
 
 
 class MixerBoundaryRule:

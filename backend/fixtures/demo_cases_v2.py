@@ -70,6 +70,69 @@ CRYPTO_TRACE_FIXTURES: List[Dict[str, Any]] = [
         "investigating_officer": "Inspector S. Mehta",
         "unit": "I4C Special Operations",
     },
+    {
+        "case_id": "CR-2026-BRIDGE-XCHAIN-04",
+        "demo_data": True,
+        "source_origin": "DEMO_CASE_SIH26183",
+        "title": "Cross-Chain Stargate Liquidity Bridge Routing (ETH -> Polygon)",
+        "chain": "ETH",
+        "suspect_wallet": "0x296f55f7730e201b1bc283b474a005b1e63ccffe",
+        "reported_amount": 68000.0,
+        "reported_asset": "USDT",
+        "crime_category": "Decentralized Finance Siphoning",
+        "documented_pattern": (
+            "Cross-chain transfer originating on Ethereum mainnet, passing through Stargate Router bridge contract "
+            "(0x8731d54e9d02c286767d56ac03e8037c07e01e98) with deterministic LayerZero event emission into Polygon."
+        ),
+        "expected_typology": "CROSS_CHAIN_BRIDGE",
+        "expected_vasp": "COINDCX",
+        "expected_vasp_confidence": "HIGH",
+        "expected_recovery_eligibility": "eligible",
+        "investigating_officer": "Inspector V. Nair",
+        "unit": "Cyber Crime Division, Bengaluru",
+    },
+    {
+        "case_id": "CR-2026-OFAC-SDN-05",
+        "demo_data": True,
+        "source_origin": "DEMO_CASE_SIH26183",
+        "title": "State-Sponsored APT Cyber Theft (Lazarus Group OFAC SDN Designation)",
+        "chain": "ETH",
+        "suspect_wallet": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+        "reported_amount": 125.0,
+        "reported_asset": "ETH",
+        "crime_category": "Critical Infrastructure Cyber Extortion",
+        "documented_pattern": (
+            "On-chain asset trace directly intersects official US Treasury OFAC Specially Designated Nationals (SDN) "
+            "digital currency entry (Lazarus Group Ronin Bridge exploiter, SDN ID 34991). Immediate mandatory asset freeze."
+        ),
+        "expected_typology": "OFAC_SANCTION_HIT",
+        "expected_vasp": "UNKNOWN",
+        "expected_vasp_confidence": "LOW",
+        "expected_recovery_eligibility": "ineligible",
+        "investigating_officer": "Special Director A. Sengupta",
+        "unit": "National Cyber Threat Analysis Centre",
+    },
+    {
+        "case_id": "CR-2026-MULE-FANIN-06",
+        "demo_data": True,
+        "source_origin": "DEMO_CASE_SIH26183",
+        "title": "Multi-Victim Telegram Task Scam Syndicate (4-to-1 Mule Fan-In)",
+        "chain": "ETH",
+        "suspect_wallet": "0x71c7656ec7ab88b098defb751b7401b5f6d8976f",
+        "reported_amount": 110000.0,
+        "reported_asset": "USDT",
+        "crime_category": "Multi-Complainant Coordinated Fraud",
+        "documented_pattern": (
+            "Consolidation of defrauded proceeds from 4 separate victim reports into a centralized intermediary "
+            "layering wallet before routing into an FIU-IND registered domestic exchange cluster."
+        ),
+        "expected_typology": "MULE_NETWORK",
+        "expected_vasp": "WAZIRX",
+        "expected_vasp_confidence": "HIGH",
+        "expected_recovery_eligibility": "eligible",
+        "investigating_officer": "ACP K. Deshmukh",
+        "unit": "Economic Offences Wing, Pune",
+    },
 ]
 
 

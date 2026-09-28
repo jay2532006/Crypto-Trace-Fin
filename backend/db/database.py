@@ -8,7 +8,7 @@ import os
 import json
 import sqlite3
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(BASE_DIR, "data", "sahyog.db")
@@ -86,6 +86,16 @@ class DatabaseManager:
                 data_completeness_pct REAL NOT NULL DEFAULT 100.0,
                 india_specific INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY (case_id) REFERENCES cases(case_id)
+            )
+        """)
+
+        # Intake Deduplication Table
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS intake_dedupe (
+                content_hash TEXT PRIMARY KEY,
+                source TEXT NOT NULL,
+                bulletin_or_ack_id TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
 
@@ -323,6 +333,25 @@ class DatabaseManager:
                 provider_source=r["provider_source"] or "LIVE_RPC"
             ))
         return results
+
+
+    def check_intake_dedupe(self, content_hash: str) -> bool:
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT 1 FROM intake_dedupe WHERE content_hash = ?", (content_hash,))
+        row = cur.fetchone()
+        conn.close()
+        return row is not None
+
+    def record_intake_dedupe(self, content_hash: str, source: str, bulletin_or_ack_id: str):
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT OR IGNORE INTO intake_dedupe (content_hash, source, bulletin_or_ack_id, created_at) VALUES (?, ?, ?, ?)",
+            (content_hash, source, bulletin_or_ack_id, datetime.now(timezone.utc).isoformat())
+        )
+        conn.commit()
+        conn.close()
 
 
 db_manager = DatabaseManager()

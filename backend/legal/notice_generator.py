@@ -84,6 +84,17 @@ ISSUED BY:
 State Police Administration
 """
 
+        partial_rec = trace_data.get("partial_recommendation")
+        if partial_rec:
+            pre_targets = ", ".join(partial_rec.get("pre_mixer_freeze_targets", []))
+            draft_text += f"""
+
+5. SPECIAL PRIVACY MIXER BOUNDARY DIRECTIVE:
+   Onward fund tracing was halted at {partial_rec.get('mixer_name', 'Privacy Mixer')} ({partial_rec.get('mixer_address', '')}) due to zero-knowledge cryptographic obfuscation.
+   Pursuant to Section 91 BNSS, you are specifically commanded to freeze all pre-mixer deposit corridor accounts and retain all inbound session IP logs for upstream wallets:
+   {pre_targets or 'Immediate upstream funding address'}
+"""
+
         draft = PreservationRequestDraft(
             draft_id=draft_id,
             case_id=case_id,

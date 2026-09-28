@@ -17,11 +17,15 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Radio,
+  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "NCRP / SAHYOG Intake", href: "/intake", icon: Radio },
+  { label: "Guided Demo", href: "/demo", icon: PlayCircle },
   { label: "Case Management", href: "/cases", icon: FolderLock },
   { label: "Investigation Workspace", href: "/investigations", icon: GitFork },
   { label: "Typology Findings", href: "/typologies", icon: Network },

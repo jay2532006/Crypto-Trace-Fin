@@ -14,7 +14,7 @@ import os
 from datetime import datetime
 from typing import Optional, Any, Dict
 from fastapi import FastAPI, HTTPException, Response
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -30,7 +30,8 @@ def load_env():
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     k, v = line.split("=", 1)
-                    os.environ[k.strip()] = v.strip()
+                    if k.strip() not in os.environ:
+                        os.environ[k.strip()] = v.strip()
 
 load_env()
 APP_MODE = os.getenv("APP_MODE", "demo")
@@ -44,10 +45,19 @@ from engine.demo_cases import get_demo_cases, get_case_by_id
 from engine.real_api import fetch_real_data
 from engine.neo4j_engine import check_neo4j_status, sync_trace_to_neo4j, execute_cypher, init_neo4j_schema
 
-from backend.api import case_router, trace_router, notice_router, evidence_router, auth_router
+from backend.api import case_router, trace_router, notice_router, evidence_router, auth_router, intake_router, copilot_router
 from backend.tracing.trace_engine import bounded_tracer, TraceConstraints
 from backend.fixtures.demo_cases_v2 import get_crypto_trace_fixtures
 from backend.legal.notice_generator import notice_generator
+
+# Startup Security Guard (Phase 8.1 Win Plan)
+_app_env = os.getenv("APP_ENV", "development").lower()
+_secret_key = os.getenv("SECRET_KEY", "cryptotrace-lea-insecure-dev-secret-key-32charsmin")
+if _app_env == "production" and _secret_key == "cryptotrace-lea-insecure-dev-secret-key-32charsmin":
+    raise RuntimeError(
+        "FATAL: Insecure default SECRET_KEY detected in production environment. "
+        "Server startup aborted per Phase 8.1 security requirements."
+    )
 
 app = FastAPI(
     title="CryptoTrace LEA — SIH 26183 Investigation Platform",
@@ -69,6 +79,8 @@ app.include_router(trace_router)
 app.include_router(notice_router)
 app.include_router(evidence_router)
 app.include_router(auth_router)
+app.include_router(intake_router)
+app.include_router(copilot_router)
 
 
 # ─── Database Setup ──────────────────────────────────────────────────────────
@@ -503,34 +515,18 @@ def favicon():
     return Response(status_code=204)
 
 
-@app.get("/", response_class=HTMLResponse)
-def serve_dashboard():
-    """Serve the main investigation dashboard HTML (SIH Evaluation)."""
-    html_path = os.path.join(BASE_DIR, "dashboard.html")
-    if os.path.exists(html_path):
-        with open(html_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse("<h1>Dashboard loading...</h1>")
+@app.get("/")
+def api_root():
+    """TraceX Sahyog API health check. Frontend is served on port 3000 (Next.js)."""
+    return {
+        "service": "TraceX Sahyog Blockchain Intelligence API",
+        "version": "2.0.0",
+        "status": "operational",
+        "frontend": "http://localhost:3000",
+        "docs": "/docs",
+    }
 
 
-@app.get("/v1", response_class=HTMLResponse)
-def serve_v1_dashboard():
-    """Serve the original golden master dashboard HTML."""
-    html_path = os.path.join(BASE_DIR, "v1", "index.html")
-    if os.path.exists(html_path):
-        with open(html_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
-    return HTMLResponse("<h1>V1 Dashboard loading...</h1>")
-
-
-@app.get("/robo", response_class=HTMLResponse)
-@app.get("/old", response_class=HTMLResponse)
-def serve_robo_dashboard():
-    """Serve the original robot pet companion & academy dashboard HTML."""
-    html_path = os.path.join(BASE_DIR, "robo", "index.html")
-    if os.path.exists(html_path):
-        with open(html_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read())
 @app.get("/download/{filename}")
 def download_file(filename: str):
     """Directly download forensic guides, manuals, and reports."""

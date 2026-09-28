@@ -103,14 +103,7 @@ OFAC_SDN_REGISTRY = {
         "risk": "CRITICAL",
         "chain": "ETH",
     },
-    "TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6": {
-        "entity": "Garantex Sanctioned TRC-20 USDT Cluster",
-        "programs": ["RUSSIA-EO14024"],
-        "designation_date": "2022-04-05",
-        "sdn_id": "34874",
-        "risk": "CRITICAL",
-        "chain": "TRON",
-    }
+
 }
 
 

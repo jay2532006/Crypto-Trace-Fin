@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Providers } from "./providers";
 import "./globals.css";
+import "./kestrel.css";
 
 export const metadata: Metadata = {
   title: "CryptoTrace LEA — Law Enforcement Investigation Platform",

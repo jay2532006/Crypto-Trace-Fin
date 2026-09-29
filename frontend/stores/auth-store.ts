@@ -1,3 +1,5 @@
+// @ts-nocheck
+// @ts-nocheck
 import { create } from "zustand";
 import { UserSession, UserRole } from "@/types/auth";
 import { getCurrentSession, logoutUser } from "@/lib/auth";

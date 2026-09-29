@@ -1,0 +1,235 @@
+{
+  "fixture_version": "1.0.0",
+  "execution_mode": "FIXTURE_REPLAY",
+  "demo_data": true,
+  "source": "CRYPTO_TRACE_DEMO_FIXTURE",
+  "case": {
+    "case_id": "CASE-2026-184721",
+    "complaint_id": "NCRP-2026-184721",
+    "source": "NCRP_INTAKE",
+    "source_badge": "NCRP",
+    "status": "UNDER_INVESTIGATION",
+    "fraud_type": "INVESTMENT_FRAUD",
+    "fraud_amount_inr": 200000,
+    "incident_datetime": "2026-09-16T14:32:00+05:30",
+    "state": "Chhattisgarh",
+    "primary_chain": "ethereum",
+    "reported_wallet": "0x7F31A4D8E11B72A1C9D5E3B4F8A2C7D19A92C",
+    "wallet_type": "NON_CUSTODIAL_CANDIDATE",
+    "data_coverage": "PARTIAL",
+    "created_at": "2026-09-16T14:34:12+05:30",
+    "last_updated_at": "2026-09-16T15:08:31+05:30"
+  },
+  "wallets": [
+    {"id":"W1","address":"0x7F31A4D8E11B72A1C9D5E3B4F8A2C7D19A92C","chain":"ethereum","type":"REPORTED_WALLET","status":"COMPLAINT_LINKED","risk_tier":"HIGH","coverage":"PARTIAL"},
+    {"id":"W2","address":"0xA431C9D2B821A19E2F77C8A3D4E1B092B821","chain":"ethereum","type":"INTERMEDIARY_WALLET","status":"BEHAVIOR_ONLY","risk_tier":"HIGH","coverage":"PARTIAL"},
+    {"id":"W3","address":"0xB921F813C441D44B29E18A6F59C370A3C441","chain":"ethereum","type":"INTERMEDIARY_WALLET","status":"BEHAVIOR_ONLY","risk_tier":"HIGH","coverage":"PARTIAL"},
+    {"id":"W4","address":"0xC211D728D739A8E401A29B6F80D4419D739","chain":"ethereum","type":"INTERMEDIARY_WALLET","status":"COMPLAINT_LINKED","risk_tier":"HIGH","coverage":"PARTIAL"},
+    {"id":"W5","address":"0xAB31D72891C2E7B18A44C9D1072F8B072C9","chain":"ethereum","type":"AGGREGATION_WALLET","status":"BEHAVIOR_ONLY","risk_tier":"HIGH","coverage":"PARTIAL"},
+    {"id":"W6","address":"0xEE91AF812D239C7201E18A6B45C9138A812","chain":"ethereum","type":"VASP_DEPOSIT","status":"LABELLED","risk_tier":"MEDIUM","coverage":"COMPLETE"},
+    {"id":"W7","address":"0xF7124AC88192B6D37E912AA7D471C5A22A4","chain":"ethereum","type":"DEX_CONTRACT","status":"PROTOCOL","risk_tier":"MEDIUM","coverage":"COMPLETE"},
+    {"id":"W8","address":"0x91ABCC21A77192F20A9D77B812E5C71D0C","chain":"polygon","type":"CROSS_CHAIN_DESTINATION","status":"HEURISTIC_CORRELATION","risk_tier":"HIGH","coverage":"PARTIAL"},
+    {"id":"W9","address":"0x48DCAB19F209A3F77B190D44A12F891C12","chain":"polygon","type":"VASP_CANDIDATE","status":"INFERRED","risk_tier":"MEDIUM","coverage":"PARTIAL"},
+    {"id":"W10","address":"TQm2x8m5xK7D1Q4Jw6K4t7P8N2W1L9","chain":"tron","type":"CROSS_CHAIN_DESTINATION","status":"UNRESOLVED","risk_tier":"MEDIUM","coverage":"PARTIAL"},
+    {"id":"W11","address":"0xMIXERBOUNDARY001","chain":"ethereum","type":"MIXER_BOUNDARY","status":"HEURISTIC","risk_tier":"HIGH","coverage":"PARTIAL"}
+  ],
+  "transactions": [
+    {"tx_hash":"0x8AF31B2C77D9E1A2B913EE7D6C4C2A71B5A91D2E3F8811","chain_id":"ethereum","block_height":23891417,"timestamp":"2026-09-16T14:35:22+05:30","from_address":"0x7F31...A92C","to_address":"0xA431...B821","asset":"ETH","event_type":"NATIVE","amount_native":"1.268","value_inr":48200,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":1,"provenance_id":"RAW-ETH-23891417-001"},
+    {"tx_hash":"0x19BC221DDC7192F18B820D144C8E33891F12","chain_id":"ethereum","block_height":23891421,"timestamp":"2026-09-16T14:37:11+05:30","from_address":"0x7F31...A92C","to_address":"0xB921...C441","asset":"ETH","event_type":"NATIVE","amount_native":"1.281","value_inr":48900,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":1,"provenance_id":"RAW-ETH-23891421-002"},
+    {"tx_hash":"0x42F19AD77E912C8120BC31A9DE7742AC31","chain_id":"ethereum","block_height":23891427,"timestamp":"2026-09-16T14:39:43+05:30","from_address":"0x7F31...A92C","to_address":"0xC211...D739","asset":"ETH","event_type":"NATIVE","amount_native":"1.274","value_inr":48700,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":1,"provenance_id":"RAW-ETH-23891427-003"},
+    {"tx_hash":"0xA91231BC7718E29D12F118A78F912CC82D","chain_id":"ethereum","block_height":23891451,"timestamp":"2026-09-16T14:48:09+05:30","from_address":"0xA431...B821","to_address":"0xAB31...72C9","asset":"ETH","event_type":"NATIVE","amount_native":"1.255","value_inr":47600,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":2,"provenance_id":"RAW-ETH-23891451-004"},
+    {"tx_hash":"0xB7719C2A8819F72B18C312ED71A9D031F","chain_id":"ethereum","block_height":23891462,"timestamp":"2026-09-16T14:52:19+05:30","from_address":"0xB921...C441","to_address":"0xAB31...72C9","asset":"ETH","event_type":"NATIVE","amount_native":"1.261","value_inr":47900,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":2,"provenance_id":"RAW-ETH-23891462-005"},
+    {"tx_hash":"0xC91F8112D4E7182A09B72D1C4E719A21","chain_id":"ethereum","block_height":23891471,"timestamp":"2026-09-16T14:55:31+05:30","from_address":"0xC211...D739","to_address":"0xAB31...72C9","asset":"ETH","event_type":"NATIVE","amount_native":"1.254","value_inr":47700,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":2,"provenance_id":"RAW-ETH-23891471-006"},
+    {"tx_hash":"0xD1881F2BA711E4A9C1D29E77A312B22C","chain_id":"ethereum","block_height":23891510,"timestamp":"2026-09-16T15:08:12+05:30","from_address":"0xAB31...72C9","to_address":"0xEE91...A812","asset":"ETH","event_type":"NATIVE","amount_native":"3.63","value_inr":138100,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":3,"provenance_id":"RAW-ETH-23891510-007"},
+    {"tx_hash":"0xE822BC1719F71C28D44E8A72F91D3CC7","chain_id":"ethereum","block_height":23891561,"timestamp":"2026-09-16T15:19:22+05:30","from_address":"0xAB31...72C9","to_address":"0xF712...2A4","asset":"USDT","event_type":"ERC20","amount_native":"620.00","value_inr":51900,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":3,"provenance_id":"RAW-ETH-23891561-008"},
+    {"tx_hash":"0xF193CC7819D20A88E127B31F44A2C91B","chain_id":"ethereum","block_height":23891601,"timestamp":"2026-09-16T15:31:41+05:30","from_address":"0xF712...2A4","to_address":"0xMIXERBOUNDARY001","asset":"USDT","event_type":"ERC20","amount_native":"600.00","value_inr":50200,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":4,"provenance_id":"RAW-ETH-23891601-009"},
+    {"tx_hash":"0xBRC11D828719A91F3C61A9C4DE82B2A8","chain_id":"ethereum","block_height":23891642,"timestamp":"2026-09-16T15:44:10+05:30","from_address":"0xAB31...72C9","to_address":"0x7A8E...901F","asset":"ETH","event_type":"NATIVE","amount_native":"0.41","value_inr":15500,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":3,"provenance_id":"RAW-ETH-23891642-010"},
+    {"tx_hash":"0xCROSS71E2A919C77A1D82E6B44F03CA91","chain_id":"ethereum","block_height":23891692,"timestamp":"2026-09-16T15:56:02+05:30","from_address":"0x7A8E...901F","to_address":"0xBRIDGE...01","asset":"USDC","event_type":"BRIDGE","amount_native":"850.00","value_inr":71100,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":4,"provenance_id":"RAW-ETH-BRIDGE-011"},
+    {"tx_hash":"0xPOLY9128C1D4E71A22B8","chain_id":"polygon","block_height":78452139,"timestamp":"2026-09-16T16:00:15+05:30","from_address":"0xBRIDGE...01","to_address":"0x91AB...0C","asset":"USDC","event_type":"BRIDGE","amount_native":"848.20","value_inr":70900,"direction":"IN","finality":"CONFIRMED","provider":"POLYGON_RPC_PRIMARY","hop":5,"provenance_id":"RAW-POLY-BRIDGE-012"},
+    {"tx_hash":"0xPOLY1182A71D8C31","chain_id":"polygon","block_height":78452202,"timestamp":"2026-09-16T16:09:22+05:30","from_address":"0x91AB...0C","to_address":"0x48DC...C12","asset":"USDC","event_type":"ERC20","amount_native":"844.10","value_inr":70500,"direction":"OUT","finality":"CONFIRMED","provider":"POLYGON_RPC_PRIMARY","hop":6,"provenance_id":"RAW-POLY-013"},
+    {"tx_hash":"0xTRON31B8821C7A91","chain_id":"tron","block_height":91283111,"timestamp":"2026-09-16T16:27:03+05:30","from_address":"TQ...TRN1","to_address":"TQm2...W9","asset":"USDT","event_type":"TRC20","amount_native":"410.00","value_inr":34200,"direction":"IN","finality":"CONFIRMED","provider":"TRON_GRID","hop":1,"provenance_id":"RAW-TRON-014"},
+    {"tx_hash":"0xETX171822A1","chain_id":"ethereum","block_height":23891711,"timestamp":"2026-09-16T16:32:19+05:30","from_address":"0xEE91...A812","to_address":"0x12AD...44C1","asset":"ETH","event_type":"NATIVE","amount_native":"0.32","value_inr":12100,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":2,"provenance_id":"RAW-ETH-015"},
+    {"tx_hash":"0xETX171822A2","chain_id":"ethereum","block_height":23891733,"timestamp":"2026-09-16T16:38:50+05:30","from_address":"0x12AD...44C1","to_address":"0x12AD...8812","asset":"ETH","event_type":"NATIVE","amount_native":"0.18","value_inr":6800,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":3,"provenance_id":"RAW-ETH-016"},
+    {"tx_hash":"0xETX171822A3","chain_id":"ethereum","block_height":23891891,"timestamp":"2026-09-16T17:04:28+05:30","from_address":"0x8812...E71C","to_address":"0xEE91...A812","asset":"USDT","event_type":"ERC20","amount_native":"1120.00","value_inr":93600,"direction":"IN","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":1,"provenance_id":"RAW-ETH-017"},
+    {"tx_hash":"0xETX171822A4","chain_id":"ethereum","block_height":23891912,"timestamp":"2026-09-16T17:13:10+05:30","from_address":"0x9912...11D2","to_address":"0xF712...2A4","asset":"USDT","event_type":"ERC20","amount_native":"820.00","value_inr":68500,"direction":"IN","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":2,"provenance_id":"RAW-ETH-018"},
+    {"tx_hash":"0xETX171822A5","chain_id":"ethereum","block_height":23892044,"timestamp":"2026-09-16T17:39:49+05:30","from_address":"0xEE91...A812","to_address":"0xC7A1...88D2","asset":"ETH","event_type":"NATIVE","amount_native":"0.15","value_inr":5700,"direction":"OUT","finality":"CONFIRMED","provider":"ETH_RPC_PRIMARY","hop":1,"provenance_id":"RAW-ETH-019"}
+  ],
+  "trace": {
+    "trace_id": "TRACE-2026-184721-01",
+    "root_wallet": "0x7F31...A92C",
+    "node_count": 17,
+    "edge_count": 31,
+    "max_depth_reached": 4,
+    "termination_reason": "LOW_VALUE",
+    "coverage": "PARTIAL",
+    "limits": {
+      "max_hops": 5,
+      "time_window_hours": 72,
+      "minimum_value_inr": 5000,
+      "max_outflows": 10,
+      "max_nodes": 100,
+      "timeout_seconds": 15
+    },
+    "paths": [
+      ["W1","W2","W5","W6"],
+      ["W1","W3","W5","W6"],
+      ["W1","W4","W5","W6"],
+      ["W5","W7","W11"],
+      ["W5","W8","W9"]
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {"id":"W1","label":"Reported Wallet","address":"0x7F31...A92C","type":"REPORTED_WALLET","chain":"ethereum"},
+      {"id":"W2","label":"Intermediary A","address":"0xA431...B821","type":"INTERMEDIARY_WALLET","chain":"ethereum"},
+      {"id":"W3","label":"Intermediary B","address":"0xB921...C441","type":"INTERMEDIARY_WALLET","chain":"ethereum"},
+      {"id":"W4","label":"Intermediary C","address":"0xC211...D739","type":"INTERMEDIARY_WALLET","chain":"ethereum"},
+      {"id":"W5","label":"Aggregation Wallet","address":"0xAB31...72C9","type":"AGGREGATION_WALLET","chain":"ethereum"},
+      {"id":"W6","label":"Exchange-X","address":"0xEE91...A812","type":"VASP_DEPOSIT","chain":"ethereum"},
+      {"id":"W7","label":"DEX Boundary","address":"0xF712...2A4","type":"DEX_CONTRACT","chain":"ethereum"},
+      {"id":"W8","label":"Polygon Destination","address":"0x91AB...0C","type":"CROSS_CHAIN_DESTINATION","chain":"polygon"},
+      {"id":"W9","label":"Candidate VASP B","address":"0x48DC...C12","type":"VASP_CANDIDATE","chain":"polygon"},
+      {"id":"W11","label":"Mixer Boundary","address":"0xMIXERBOUNDARY001","type":"MIXER_BOUNDARY","chain":"ethereum"},
+      {"id":"W12","label":"Possible Exit","address":"0xHEURISTIC...91","type":"HEURISTIC_EXIT","chain":"ethereum"}
+    ],
+    "edges": [
+      {"id":"E1","source":"W1","target":"W2","tx_hash":"0x8AF3...811","value_inr":48200,"asset":"ETH","hop":1,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E2","source":"W1","target":"W3","tx_hash":"0x19BC...12","value_inr":48900,"asset":"ETH","hop":1,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E3","source":"W1","target":"W4","tx_hash":"0x42F1...31","value_inr":48700,"asset":"ETH","hop":1,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E4","source":"W2","target":"W5","tx_hash":"0xA912...004","value_inr":47600,"asset":"ETH","hop":2,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E5","source":"W3","target":"W5","tx_hash":"0xB771...005","value_inr":47900,"asset":"ETH","hop":2,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E6","source":"W4","target":"W5","tx_hash":"0xC91F...006","value_inr":47700,"asset":"ETH","hop":2,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E7","source":"W5","target":"W6","tx_hash":"0xD188...007","value_inr":138100,"asset":"ETH","hop":3,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E8","source":"W5","target":"W7","tx_hash":"0xE822...008","value_inr":51900,"asset":"USDT","hop":3,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E9","source":"W7","target":"W11","tx_hash":"0xF193...009","value_inr":50200,"asset":"USDT","hop":4,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E10","source":"W7","target":"W8","tx_hash":"0xCROS...011","value_inr":71100,"asset":"USDC","hop":4,"style":"SOLID","evidence_type":"BRIDGE_PROVEN"},
+      {"id":"E11","source":"W8","target":"W9","tx_hash":"0xPOLY...013","value_inr":70500,"asset":"USDC","hop":6,"style":"SOLID","evidence_type":"DIRECT"},
+      {"id":"E12","source":"W11","target":"W12","tx_hash":"HEURISTIC-001","value_inr":49700,"asset":"USDT","hop":5,"style":"DASHED","evidence_type":"HEURISTIC","edge_label":"Possible Exit — Heuristic Only"}
+    ]
+  },
+  "typologies": [
+    {
+      "finding_id":"FIND-001",
+      "pattern_type":"MULE_NETWORK",
+      "india_specific":true,
+      "confidence":"MEDIUM",
+      "confidence_band":"MEDIUM",
+      "rule_version":"MULE_NETWORK-v1.2",
+      "victim_wallet_count":3,
+      "intermediate_wallet_addresses":["0xA431...B821","0xB921...C441","0xC211...D739"],
+      "aggregation_address":"0xAB31...72C9",
+      "time_window_hours":41,
+      "total_value_aggregated_usd":1776.52,
+      "evidence_references":["0x8AF3...811","0x19BC...12","0x42F1...31","0xA912...004","0xB771...005","0xC91F...006"],
+      "uncertainty_note":"Mule wallet classification is based on behavioral heuristics only. Individual wallet control requires KYC verification which is outside the scope of on-chain analysis.",
+      "data_coverage":"PARTIAL"
+    },
+    {"finding_id":"FIND-002","pattern_type":"RAPID_HOP","india_specific":false,"confidence":"HIGH","rule_version":"RAPID_HOP-v1.1","evidence_references":["0xA912...004","0xD188...007"],"data_coverage":"COMPLETE"},
+    {"finding_id":"FIND-003","pattern_type":"FAN_OUT","india_specific":false,"confidence":"MEDIUM","rule_version":"FAN_OUT-v1.0","evidence_references":["0x8AF3...811","0x19BC...12","0x42F1...31"],"data_coverage":"PARTIAL"},
+    {"finding_id":"FIND-004","pattern_type":"CONSOLIDATION","india_specific":false,"confidence":"HIGH","rule_version":"CONSOLIDATION-v1.0","evidence_references":["0xA912...004","0xB771...005","0xC91F...006","0xD188...007"],"data_coverage":"PARTIAL"},
+    {"finding_id":"FIND-005","pattern_type":"MIXER_EXPOSURE","india_specific":false,"confidence":"MEDIUM","rule_version":"MIXER_EXPOSURE-v1.0","evidence_references":["0xF193...009"],"data_coverage":"PARTIAL"},
+    {"finding_id":"FIND-006","pattern_type":"MIXER_BOUNDARY_CLUSTER_LEAD","india_specific":false,"confidence":0.25,"confidence_band":"LEAD","rule_version":"MIXER-LEAD-v1.0","evidence_references":["0xF193...009"],"uncertainty_note":"This address received a withdrawal from the same mixer pool in the same denomination window as the traced deposit. This is a timing and denomination correlation only. It is not cryptographic proof of connection to the suspect wallet. Do not treat as confirmed attribution without independent corroboration.","data_coverage":"PARTIAL"},
+    {"finding_id":"FIND-007","pattern_type":"DEX_BOUNDARY","india_specific":false,"confidence":"MEDIUM","rule_version":"DEX-v1.0","evidence_references":["0xE822...008","0xF193...009"],"data_coverage":"COMPLETE"},
+    {"finding_id":"FIND-008","pattern_type":"BRIDGE_MEDIATED_MOVEMENT","india_specific":false,"confidence":"HIGH","rule_version":"BRIDGE-v1.0","evidence_references":["0xCROS...011","0xPOLY...013"],"evidence_strength":"DIRECT","data_coverage":"COMPLETE"}
+  ],
+  "vasp_candidates": [
+    {"candidate_id":"VASP-CAND-01","name":"Exchange-X","address":"0xEE91...A812","chain":"ethereum","label_status":"VERIFIED","label_source":"EXCHANGE_REGISTRY_FIXTURE","confidence":0.81,"confidence_band":"HIGH","hop_distance":1,"evidence_references":["0xD188...007","LABEL-003"],"ownership_proof":false},
+    {"candidate_id":"VASP-CAND-02","name":"Exchange-Y","address":"0x48DC...C12","chain":"polygon","label_status":"INFERRED","label_source":"BEHAVIORAL_CLUSTER_FIXTURE","confidence":0.56,"confidence_band":"MEDIUM","hop_distance":6,"evidence_references":["0xPOLY...013"],"ownership_proof":false},
+    {"candidate_id":"VASP-CAND-03","name":"Unknown VASP Cluster","address":"0xUNRESOLVED...11","chain":"ethereum","label_status":"UNRESOLVED","label_source":"NONE","confidence":0.18,"confidence_band":"LOW","hop_distance":4,"evidence_references":[],"ownership_proof":false}
+  ],
+  "attribution": {
+    "policy_version":"AVS-2026.03",
+    "candidate_id":"VASP-CAND-01",
+    "base_weights":{"label":0.35,"directness":0.25,"retained":0.15,"finality":0.1,"temporal":0.1,"corroboration":0.05},
+    "fired_modifiers":["HIGH_VALUE","INDIA_EXCHANGE","MIXER_PATH"],
+    "final_weights":{"label":0.32,"directness":0.31,"retained":0.13,"finality":0.09,"temporal":0.10,"corroboration":0.05},
+    "score":0.81,
+    "confidence_band":"HIGH",
+    "scoring_metadata": {
+      "steps":["POLICY_LOADED","STRUCTURAL_OVERRIDE_CHECKED","CONTEXTUAL_MODIFIERS_APPLIED","CONFLICTS_RESOLVED","WEIGHTS_CLAMPED","WEIGHTS_RENORMALIZED","SCORE_CALCULATED"],
+      "path_contains_bridge":true
+    }
+  },
+  "cross_chain": [
+    {"link_id":"XCHAIN-001","from_chain":"ethereum","to_chain":"polygon","from_address":"0x7A8E...901F","to_address":"0x91AB...0C","relationship":"PROVEN_BRIDGE","evidence_strength":"DIRECT","timestamp_delta_minutes":3,"value_correlation":0.94,"uncertainty":false,"evidence_references":["0xCROS...011","0xPOLY...012"]},
+    {"link_id":"XCHAIN-002","from_chain":"ethereum","to_chain":"tron","from_address":"0xEE91...A812","to_address":"TQm2...W9","relationship":"HEURISTIC_CORRELATION","evidence_strength":"CORRELATION","timestamp_delta_minutes":11,"value_correlation":0.89,"uncertainty":true,"evidence_references":["0xETX171822A5","0xTRON31B8821C7A91"]}
+  ],
+  "risk": {
+    "risk_tier":"HIGH",
+    "risk_score":78,
+    "rule_version":"RISK-2026.02",
+    "factors":[
+      {"name":"RAPID_HOP","weight":0.28,"evidence":["0xA912...004","0xD188...007"]},
+      {"name":"MULE_NETWORK","weight":0.32,"evidence":["FIND-001"]},
+      {"name":"HIGH_VALUE","weight":0.20,"evidence":["0x8AF3...811"]},
+      {"name":"CROSS_CHAIN_EXPOSURE","weight":0.20,"evidence":["XCHAIN-001"]}
+    ]
+  },
+  "recovery": {
+    "eligible":true,
+    "label":"Heuristic Recovery Estimate",
+    "recovery_score":0.63,
+    "display_tier":"AMBER",
+    "action_window_hours":18,
+    "value_ratio":0.74,
+    "exchange_cooperation":0.85,
+    "time_urgency":0.91,
+    "path_clarity":0.33,
+    "top_candidate_confidence":0.81,
+    "disclaimer":"Not a statistical probability.",
+    "cooperation_source":"ADMINISTRATOR_ESTIMATE",
+    "cooperation_last_reviewed":"2026-09-15"
+  },
+  "recommendations": [
+    {"recommendation_id":"REC-001","priority":"HIGH","title":"Preserve VASP deposit records","reason":"Verified candidate VASP is one hop from traced funds.","evidence_references":["0xD188...007","VASP-CAND-01"],"uncertainty":"VASP label does not establish wallet ownership."},
+    {"recommendation_id":"REC-002","priority":"HIGH","title":"Review intermediary wallet cluster","reason":"Three intermediary wallets satisfy the configured MULE_NETWORK behavioral pattern.","evidence_references":["FIND-001"],"uncertainty":"Wallet control requires evidence outside on-chain behavior."},
+    {"recommendation_id":"REC-003","priority":"MEDIUM","title":"Preserve cross-chain evidence","reason":"A direct Ethereum-to-Polygon bridge event was observed.","evidence_references":["XCHAIN-001"],"uncertainty":"The Ethereum-to-Tron relationship is heuristic only."}
+  ],
+  "evidence": {
+    "manifest_id":"EV-MAN-184721",
+    "integrity_status":"VERIFIED",
+    "hash_algorithm":"SHA-256",
+    "items":[
+      {"evidence_id":"EV-001","type":"TRANSACTION","source":"Ethereum RPC","reference":"0x8AF3...811","payload_hash":"8ae31c...72d91","immutable":true},
+      {"evidence_id":"EV-002","type":"TRANSACTION","source":"Ethereum RPC","reference":"0xD188...007","payload_hash":"91cd72...a72c","immutable":true},
+      {"evidence_id":"EV-003","type":"TYPOLOGY","source":"Deterministic Rule Engine","reference":"FIND-001","payload_hash":"71af82...3d1e","immutable":true},
+      {"evidence_id":"EV-004","type":"VASP_LABEL","source":"Exchange Registry Fixture","reference":"VASP-CAND-01","payload_hash":"33bc19...881d","immutable":true},
+      {"evidence_id":"EV-005","type":"TRACE","source":"Trace Engine Fixture","reference":"TRACE-2026-184721-01","payload_hash":"4bd1af...aa09","immutable":true},
+      {"evidence_id":"EV-006","type":"CROSS_CHAIN","source":"Bridge Fixture","reference":"XCHAIN-001","payload_hash":"1f91ca...d03f","immutable":true},
+      {"evidence_id":"EV-007","type":"RECOVERY","source":"Heuristic Calculator Fixture","reference":"RECOVERY-184721","payload_hash":"c712ad...9910","immutable":true}
+    ]
+  },
+  "alerts": [
+    {"alert_id":"ALERT-001","severity":"HIGH","type":"RAPID_HOP","title":"Rapid-hop activity detected","case_id":"CASE-2026-184721","wallet":"0xAB31...72C9","created_at":"2026-09-16T15:09:12+05:30","status":"OPEN","evidence_references":["0xA912...004","0xD188...007"]},
+    {"alert_id":"ALERT-002","severity":"MEDIUM","type":"MULE_NETWORK","title":"India Fraud Pattern detected","case_id":"CASE-2026-184721","wallet":"0xAB31...72C9","created_at":"2026-09-16T15:10:11+05:30","status":"OPEN","evidence_references":["FIND-001"]},
+    {"alert_id":"ALERT-003","severity":"MEDIUM","type":"NEW_VASP_INTERACTION","title":"New VASP interaction detected","case_id":"CASE-2026-184721","wallet":"0xEE91...A812","created_at":"2026-09-16T15:11:44+05:30","status":"OPEN","evidence_references":["VASP-CAND-01"]},
+    {"alert_id":"ALERT-004","severity":"LOW","type":"PARTIAL_COVERAGE","title":"Wallet history is partially indexed","case_id":"CASE-2026-184721","wallet":"0x7F31...A92C","created_at":"2026-09-16T15:12:22+05:30","status":"OPEN","evidence_references":[]}
+  ],
+  "audit_events": [
+    {"audit_id":"AUD-001","case_id":"CASE-2026-184721","timestamp":"2026-09-16T14:34:12+05:30","actor_role":"INVESTIGATOR","action":"CASE_CREATED","target_id":"CASE-2026-184721","integrity_hash":"a901...1122"},
+    {"audit_id":"AUD-002","case_id":"CASE-2026-184721","timestamp":"2026-09-16T14:34:16+05:30","actor_role":"SYSTEM","action":"TRACE_QUEUED","target_id":"TRACE-2026-184721-01","integrity_hash":"b812...2233"},
+    {"audit_id":"AUD-003","case_id":"CASE-2026-184721","timestamp":"2026-09-16T14:41:33+05:30","actor_role":"SYSTEM","action":"MULE_NETWORK_FINDING_CREATED","target_id":"FIND-001","integrity_hash":"c723...3344"},
+    {"audit_id":"AUD-004","case_id":"CASE-2026-184721","timestamp":"2026-09-16T15:03:14+05:30","actor_role":"INVESTIGATOR","action":"PRESERVATION_REQUEST_DRAFTED","target_id":"REQ-001","integrity_hash":"d834...4455"},
+    {"audit_id":"AUD-005","case_id":"CASE-2026-184721","timestamp":"2026-09-16T15:05:39+05:30","actor_role":"SUPERVISOR","action":"PRESERVATION_REQUEST_REVIEWED","target_id":"REQ-001","integrity_hash":"e945...5566"}
+  ],
+  "supervisor_request": {
+    "request_id":"REQ-001",
+    "case_id":"CASE-2026-184721",
+    "request_type":"VASP_PRESERVATION",
+    "recipient":"Exchange-X Compliance",
+    "status":"PENDING_SUPERVISOR",
+    "purpose":"Preservation of transaction and related records",
+    "evidence_manifest_id":"EV-MAN-184721",
+    "drafted_by":"Demo Investigator"
+  },
+  "system_status": {
+    "execution_mode":"FIXTURE_REPLAY",
+    "chains": {
+      "ethereum":{"status":"SIMULATED_ONLINE","last_block":23891442},
+      "polygon":{"status":"SIMULATED_ONLINE","last_block":78452119},
+      "tron":{"status":"SIMULATED_ONLINE","last_block":91283111},
+      "bitcoin":{"status":"SIMULATED_ONLINE","last_block":913822}
+    },
+    "pipeline":{"fetch":"READY","validate":"READY","extract":"READY","normalize":"READY","deduplicate":"READY","persist":"SIMULATED","commit":"SIMULATED","advance":"SIMULATED"}
+  }
+}

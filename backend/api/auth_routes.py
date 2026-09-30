@@ -1,17 +1,20 @@
 """
-CryptoTrace LEA — Authentication Routes
+CryptoTrace LEA - Authentication Routes
 Endpoints:
 - POST /api/v1/auth/login
 - GET  /api/v1/auth/me
 """
 
 from typing import Dict, Any
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from backend.auth.jwt_handler import authenticate_user, create_access_token
 from backend.auth.decorators import get_current_user
 
 router = APIRouter(tags=["Auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 class LoginRequest(BaseModel):
@@ -21,8 +24,9 @@ class LoginRequest(BaseModel):
 
 @router.post("/api/v1/auth/login")
 @router.post("/api/v1/login")
-def login(req: LoginRequest):
-    """Authenticates LEA credentials and issues signed JWT bearer token."""
+@limiter.limit("10/minute")
+def login(request: Request, req: LoginRequest):
+    """Authenticates LEA credentials and issues signed JWT bearer token (Rate limited: 10/min)."""
     user = authenticate_user(req.username, req.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password.")

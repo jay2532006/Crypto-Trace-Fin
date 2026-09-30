@@ -1,7 +1,8 @@
 """
-CryptoTrace LEA — FastAPI Auth Dependencies & Permission Guards
+CryptoTrace LEA - FastAPI Auth Dependencies & Permission Guards
 """
 
+import os
 from typing import Dict, Any, Optional
 from fastapi import Header, HTTPException, status
 from .jwt_handler import decode_access_token
@@ -11,8 +12,11 @@ from .rbac import has_permission
 def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
     """
     Extracts and validates JWT from Authorization header.
-    Defaults to 'investigator1' in development/demo mode if no token supplied for smooth testing.
+    In production mode (APP_ENV=production): rejects unauthenticated requests with HTTP 401.
+    In development/demo mode: defaults to 'investigator1' dev persona for smooth local testing.
     """
+    app_env = os.getenv("APP_ENV", "development").lower()
+
     if authorization:
         parts = authorization.split()
         if len(parts) == 2 and parts[0].lower() == "bearer":
@@ -22,13 +26,23 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[str, A
                     "username": payload.get("sub", "investigator1"),
                     "role": payload.get("role", "INVESTIGATOR"),
                     "unit": payload.get("unit", "Cyber Crime Unit"),
+                    "name": payload.get("name", "Inspector R. Sharma"),
                 }
+
+    # Production gate: strictly require authentication
+    if app_env == "production":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please provide a valid Bearer token.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # Development/Demo fallback persona
     return {
         "username": "investigator1",
         "role": "INVESTIGATOR",
         "unit": "Cyber Crime Police Station",
+        "name": "Inspector R. Sharma (Dev Persona)",
     }
 
 

@@ -1,17 +1,20 @@
 """
-CryptoTrace LEA — Trace Routes
+CryptoTrace LEA - Trace Routes
 Endpoints:
 - POST /api/v1/trace (Executes Bounded Forensic Attribution Trace)
 """
 
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from backend.tracing.trace_engine import bounded_tracer, TraceConstraints
 from backend.audit.audit_engine import audit_engine
 from backend.auth.decorators import get_current_user
 
 router = APIRouter(prefix="/api/v1", tags=["Tracing"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 class BoundedTraceRequest(BaseModel):
@@ -23,9 +26,10 @@ class BoundedTraceRequest(BaseModel):
 
 
 @router.post("/trace")
-def execute_trace(req: BoundedTraceRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
+@limiter.limit("20/minute")
+def execute_trace(request: Request, req: BoundedTraceRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     """
-    Executes bounded deterministic multi-hop tracing.
+    Executes bounded deterministic multi-hop tracing (Rate limited: 20/min).
     Runs MULE_NETWORK, AdaptiveVASPScorer, and Heuristic Recovery Estimator.
     """
     address = (req.address or "").strip()

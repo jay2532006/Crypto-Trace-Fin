@@ -1,4 +1,4 @@
-﻿"""
+"""
 SAHYOG Blockchain Intelligence & VASP Attribution Engine
 FastAPI Backend â€” Main Application
 
@@ -13,7 +13,11 @@ import json
 import os
 from datetime import datetime
 from typing import Optional, Any, Dict
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request, Depends
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from backend.auth.decorators import get_current_user
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,11 +63,14 @@ if _app_env == "production" and _secret_key == "cryptotrace-lea-insecure-dev-sec
         "Server startup aborted per Phase 8.1 security requirements."
     )
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
     title="CryptoTrace LEA â€” SIH 26183 Investigation Platform",
     description="Real-Time Crypto Fraud Attribution System for Indian Law Enforcement (MHA / I4C).",
     version="2.0.0-SIH26183",
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 allowed_origins = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(
@@ -191,8 +198,9 @@ def get_config():
 
 
 @app.get("/api/prices")
-def get_crypto_prices():
-    """Return live CoinGecko spot rates for BTC, ETH, SOL, TRON, USDT."""
+@limiter.limit("60/minute")
+def get_crypto_prices(request: Request):
+    """Return live CoinGecko spot rates for BTC, ETH, SOL, TRON, USDT (Rate limited: 60/min)."""
     from engine.price_feed import get_live_prices
     return get_live_prices()
 
@@ -344,7 +352,8 @@ def get_trace_result(trace_id: int):
 
 
 @app.post("/api/trace")
-def run_trace(req: TraceRequest):
+@limiter.limit("20/minute")
+def run_trace(request: Request, req: TraceRequest, current_user: Dict[str, Any] = Depends(get_current_user)):
     """Main endpoint: Validate wallet address and execute VASP attribution trace."""
     address = (req.address or "").strip()
     if not address:
@@ -417,7 +426,7 @@ def run_trace(req: TraceRequest):
         result["risk_score"],
         result["risk_category"],
         result["nearest_vasp"]["confidence"],
-        req.investigating_officer or "Inspector R. Sharma",
+        req.investigating_officer or current_user.get("name") or "Investigating Officer",
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         json.dumps(result),
     ))

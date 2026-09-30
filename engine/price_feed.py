@@ -34,7 +34,7 @@ def get_live_prices() -> Dict[str, Dict[str, float]]:
     if now - _LAST_FETCH_TIME < CACHE_TTL:
         return _CACHED_RATES
 
-    api_key = os.getenv("COINGECKO_DEMO_API_KEY", "CG-waBsjQZ4qKCCq21TyijPNeJS")
+    api_key = os.getenv("COINGECKO_DEMO_API_KEY", "")
     url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,tron,tether,binancecoin,matic-network&vs_currencies=usd,inr"
     headers = {
         "User-Agent": "TraceX-Forensic-Engine/2.0",

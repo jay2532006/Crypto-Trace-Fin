@@ -4,7 +4,8 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import cytoscape, { Core, EventObject } from 'cytoscape';
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw, Layers, ShieldAlert, Building2 } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, Layers, ShieldAlert, Building2, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
 import { useGraphStore } from '@/stores/graph-store';
 import { formatAddress, formatCrypto } from '@/lib/utils';
@@ -229,6 +230,20 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
   const handleZoomOut = () => cyRef.current?.zoom(cyRef.current.zoom() * 0.8);
   const handleFit = () => cyRef.current?.fit(undefined, 40);
 
+  const handleExportPng = () => {
+    if (!cyRef.current) return;
+    try {
+      const pngData = cyRef.current.png({ full: true, scale: 2, bg: '#070f1e' });
+      const link = document.createElement('a');
+      link.download = `CryptoTrace-Forensic-Graph-${Date.now()}.png`;
+      link.href = pngData;
+      link.click();
+      toast.success('Forensic graph snapshot exported as high-res PNG.');
+    } catch (e) {
+      toast.error('Failed to export graph snapshot.');
+    }
+  };
+
   return (
     <div className="relative w-full rounded-xl border border-navy-800 bg-[#070f1e] overflow-hidden shadow-2xl">
       {/* Top Toolbar */}
@@ -291,6 +306,13 @@ export const CytoscapeGraph: React.FC<CytoscapeGraphProps> = ({
           className="p-1.5 text-slate-300 hover:text-white hover:bg-navy-800 rounded transition-colors"
         >
           <Maximize2 className="h-4 w-4" />
+        </button>
+        <button
+          onClick={handleExportPng}
+          title="Export High-Res Graph (PNG)"
+          className="p-1.5 text-slate-300 hover:text-white hover:bg-navy-800 rounded transition-colors"
+        >
+          <Download className="h-4 w-4 text-emerald-400" />
         </button>
         <button
           onClick={initCytoscape}

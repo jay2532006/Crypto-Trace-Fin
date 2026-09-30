@@ -65,9 +65,23 @@ def create_case(req: CaseIntakeRequest, current_user: Dict[str, Any] = Depends(g
 
 
 @router.get("/cases")
-def list_cases(limit: int = 50, current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Lists investigations stored in the database."""
-    return db_manager.list_cases(limit)
+def list_cases(
+    page: int = 1,
+    per_page: int = 25,
+    chain: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: Optional[int] = None,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Lists investigations stored in the database with pagination and filtering."""
+    fetch_limit = limit or max(50, page * per_page)
+    cases = db_manager.list_cases(fetch_limit)
+    if chain:
+        cases = [c for c in cases if (c.get("chain") or "").upper() == chain.upper()]
+    if status:
+        cases = [c for c in cases if (c.get("status") or "").upper() == status.upper()]
+    start_idx = (page - 1) * per_page
+    return cases[start_idx : start_idx + per_page]
 
 
 @router.get("/cases/{case_id}")

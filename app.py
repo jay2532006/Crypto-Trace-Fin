@@ -175,6 +175,13 @@ def health():
     }
 
 
+@app.get("/api/health/providers")
+def get_provider_health():
+    """Live provider health check with actual latency measurements."""
+    from backend.health.provider_health import check_all_providers
+    return check_all_providers()
+
+
 @app.get("/api/config")
 def get_config():
     return {

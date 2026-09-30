@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/api-client';
 'use client';
 
 import React, { useState } from 'react';
@@ -112,26 +113,22 @@ export default function GuidedDemoPage() {
     setSimulationLog(null);
     try {
       if (currentStep === 1) {
-        const res = await fetch('http://localhost:8765/api/v1/intake/ncrp/complaint', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            acknowledgement_no: `NCRP-DEMO-${Date.now().toString().slice(-6)}`,
-            complainant_name: 'Dr. Anita Joshi',
-            incident_date: '2026-09-28T09:30:00Z',
-            category: 'Investment Fraud',
-            chain: 'TRON',
-            suspect_wallet: 'TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6',
-            reported_loss_inr: 4500000.0,
-            transaction_hash: '0x3a4b9c1d2e5f8a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b',
-            description: 'Funds defrauded under guise of institutional crypto trading pool.',
-          }),
+        const res = await apiClient.post('/api/v1/intake/ncrp/complaint', {
+          acknowledgement_no: `NCRP-DEMO-${Date.now().toString().slice(-6)}`,
+          complainant_name: 'Dr. Anita Joshi',
+          incident_date: '2026-09-28T09:30:00Z',
+          category: 'Investment Fraud',
+          chain: 'TRON',
+          suspect_wallet: 'TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6',
+          reported_loss_inr: 4500000.0,
+          transaction_hash: '0x3a4b9c1d2e5f8a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b',
+          description: 'Funds defrauded under guise of institutional crypto trading pool.',
         });
-        const data = await res.json();
+        const data = res.data;
         setSimulationLog(`Simulation OK: Ingested complaint ${data.case_id}. State: ${data.workflow_state}. Audit Log Recorded.`);
       } else if (currentStep === 7) {
-        const res = await fetch('http://localhost:8765/api/v1/audit/verify-chain');
-        const data = await res.json();
+        const res = await apiClient.get('/api/v1/audit/verify-chain');
+        const data = res.data;
         setAuditVerified(data.is_valid || data.valid);
         setAuditDetails(data);
         setSimulationLog(`Audit Chain Validated: ${data.total_events || data.events_checked} cryptographically linked events. Status: 100% UNTAMPERED.`);
@@ -456,7 +453,7 @@ export default function GuidedDemoPage() {
                 </p>
                 <div className="flex items-center gap-2 pt-1">
                   <a
-                    href="http://localhost:8765/api/v1/cases/CR-2026-MULE-IND-01/report.pdf"
+                    href="/api/v1/cases/CR-2026-MULE-IND-01/report.pdf"
                     target="_blank"
                     rel="noreferrer"
                   >

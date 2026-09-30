@@ -1,3 +1,4 @@
+import { apiClient } from '@/lib/api-client';
 "use client";
 
 import * as React from "react";
@@ -33,14 +34,10 @@ export default function IntakePage() {
 
   const fetchStatusAndQueue = React.useCallback(async () => {
     try {
-      const stRes = await fetch("http://localhost:8765/api/v1/intake/status");
-      if (stRes.ok) {
-        setGatewayStatus(await stRes.json());
-      }
-      const qRes = await fetch("http://localhost:8765/api/v1/intake/queue");
-      if (qRes.ok) {
-        setQueue(await qRes.json());
-      }
+      const stRes = await apiClient.get("/api/v1/intake/status");
+      setGatewayStatus(stRes.data);
+      const qRes = await apiClient.get("/api/v1/intake/queue");
+      setQueue(qRes.data);
     } catch (e) {
       console.error("Intake fetch error:", e);
     }
@@ -145,14 +142,9 @@ export default function IntakePage() {
   const handleTriggerTrace = async (caseId: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8765/api/v1/intake/${caseId}/trace`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
-      });
-      if (res.ok) {
-        setActionMessage(`[?] Forensic trace completed and legal preservation notice drafted for ${caseId}!`);
-        fetchStatusAndQueue();
-      }
+      const res = await apiClient.post(`/api/v1/intake/${caseId}/trace`);
+      setActionMessage(`[?] Forensic trace completed and legal preservation notice drafted for ${caseId}!`);
+      fetchStatusAndQueue();
     } catch (err: any) {
       setActionMessage(`[!] Error: ${err.message}`);
     } finally {

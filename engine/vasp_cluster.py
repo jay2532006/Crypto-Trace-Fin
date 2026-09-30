@@ -448,3 +448,44 @@ def get_intelligence_summary() -> dict:
         "defi_bridges": len(DEFI_BRIDGES),
         "supported_chains": ["BTC", "ETH", "BNB", "TRON", "POLYGON", "SOL"],
     }
+
+# Chain ID to Explorer mapping
+CHAIN_EXPLORERS = {
+    "BTC": {
+        "name": "Bitcoin",
+        "explorer_url": "https://blockchair.com/bitcoin/address/{address}",
+        "api_url": "https://blockchain.info/rawaddr/{address}",
+        "symbol": "BTC",
+    },
+    "ETH": {
+        "name": "Ethereum",
+        "explorer_url": "https://etherscan.io/address/{address}",
+        "api_url": "https://api.etherscan.io/api",
+        "symbol": "ETH",
+    },
+    "TRON": {
+        "name": "TRON / TRC-20",
+        "explorer_url": "https://tronscan.org/#/address/{address}",
+        "api_url": "https://apilist.tronscanapi.com/api/accountv2",
+        "symbol": "TRX",
+    },
+    "BNB": {
+        "name": "BNB Smart Chain",
+        "explorer_url": "https://bscscan.com/address/{address}",
+        "api_url": "https://api.bscscan.com/api",
+        "symbol": "BNB",
+    },
+    "POLYGON": {
+        "name": "Polygon / MATIC",
+        "explorer_url": "https://polygonscan.com/address/{address}",
+        "api_url": "https://api.polygonscan.com/api",
+        "symbol": "MATIC",
+    },
+    "SOL": {
+        "name": "Solana",
+        "explorer_url": "https://solscan.io/account/{address}",
+        "api_url": "https://api.mainnet-beta.solana.com",
+        "symbol": "SOL",
+    },
+}
+

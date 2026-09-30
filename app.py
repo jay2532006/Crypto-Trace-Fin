@@ -1,11 +1,11 @@
-"""
+﻿"""
 SAHYOG Blockchain Intelligence & VASP Attribution Engine
-FastAPI Backend — Main Application
+FastAPI Backend â€” Main Application
 
 DATA SOURCE LEGEND (shown in every API response):
-  🟢 LIVE      = Real-time data from public blockchain explorer APIs
-  🟡 SIMULATED = Algorithmically generated fallback (when API unavailable)
-  🔴 HARDCODED = Static data we manually curated (VASP DB, legal templates, mixer list)
+  ðŸŸ¢ LIVE      = Real-time data from public blockchain explorer APIs
+  ðŸŸ¡ SIMULATED = Algorithmically generated fallback (when API unavailable)
+  ðŸ”´ HARDCODED = Static data we manually curated (VASP DB, legal templates, mixer list)
 """
 
 import sqlite3
@@ -60,7 +60,7 @@ if _app_env == "production" and _secret_key == "cryptotrace-lea-insecure-dev-sec
     )
 
 app = FastAPI(
-    title="CryptoTrace LEA — SIH 26183 Investigation Platform",
+    title="CryptoTrace LEA â€” SIH 26183 Investigation Platform",
     description="Real-Time Crypto Fraud Attribution System for Indian Law Enforcement (MHA / I4C).",
     version="2.0.0-SIH26183",
 )
@@ -83,7 +83,7 @@ app.include_router(intake_router)
 app.include_router(copilot_router)
 
 
-# ─── Database Setup ──────────────────────────────────────────────────────────
+# â”€â”€â”€ Database Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def init_db():
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
@@ -115,7 +115,7 @@ def init_db():
 init_db()
 
 
-# ─── Request Models ──────────────────────────────────────────────────────────
+# â”€â”€â”€ Request Models â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TraceRequest(BaseModel):
     address: str
@@ -153,7 +153,7 @@ class AIReportRequest(BaseModel):
     case_id: Optional[str] = "CR-2026-UNSPECIFIED"
 
 
-# ─── API Endpoints ───────────────────────────────────────────────────────────
+# â”€â”€â”€ API Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.get("/api/health")
 def health():
@@ -185,7 +185,7 @@ def get_config():
         "claims": {
             "sahyog_integration": "MOCK / DRAFT SPECIFICATION",
             "status": "SIH26182 Research Prototype",
-            "legal_notice": "Draft only — Requires IO Authorization under BNSS 2023 / CrPC 91"
+            "legal_notice": "Draft only â€” Requires IO Authorization under BNSS 2023 / CrPC 91"
         }
     }
 
@@ -229,7 +229,7 @@ def test_custom_api(req: CustomApiTestRequest):
     )
 
 
-# ─── AI Investigator Copilot Endpoints ─────────────────────────────────────
+# â”€â”€â”€ AI Investigator Copilot Endpoints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 @app.get("/api/ai/health")
 def get_ai_health():
@@ -295,7 +295,7 @@ def demo_cases():
 @app.get("/api/live/{address}")
 def get_live_data(address: str, chain: Optional[str] = None):
     """
-    🟢 LIVE endpoint — Fetch real blockchain data from public APIs.
+    ðŸŸ¢ LIVE endpoint â€” Fetch real blockchain data from public APIs.
     Calls Etherscan (ETH), Blockstream/Blockchair (BTC), TronScan (TRON).
     Strictly validates address format before making upstream queries.
     """
@@ -554,3 +554,117 @@ def download_file(filename: str):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8765, reload=True)
+
+
+@app.on_event("startup")
+async def on_startup():
+    """Initialize all intelligence databases and background refresh tasks on startup."""
+    import logging
+    log = logging.getLogger("tracex.startup")
+
+    # 1. Initialize intelligence DB (VASP / Mixer / Bridge tables)
+    try:
+        from backend.db.intelligence_db import init_intelligence_db, get_intelligence_stats
+        init_intelligence_db()
+        stats = get_intelligence_stats()
+        log.info(
+            "Intelligence DB ready: %d VASP wallets, %d mixers, %d bridges",
+            stats["vasp_wallets"], stats["mixer_contracts"], stats["defi_bridges"]
+        )
+    except Exception as e:
+        log.warning("Intelligence DB init failed (non-fatal): %s", e)
+
+    # 2. Start OFAC auto-refresh scheduler
+    try:
+        from engine.ofac_sanctions import start_ofac_refresh_scheduler
+        start_ofac_refresh_scheduler()
+        log.info("OFAC auto-refresh scheduler started.")
+    except Exception as e:
+        log.warning("OFAC refresh scheduler failed to start (non-fatal): %s", e)
+
+
+# =============================================================================
+# INTELLIGENCE MANAGEMENT ENDPOINTS (Priority 3)
+# =============================================================================
+
+@app.get("/api/v1/intelligence/stats")
+def get_intelligence_stats_endpoint():
+    """Return intelligence DB coverage stats (VASP wallets, mixers, bridges)."""
+    try:
+        from backend.db.intelligence_db import get_intelligence_stats
+        from engine.ofac_sanctions import get_ofac_address_count, get_ofac_last_refresh, get_ofac_refresh_source
+        from engine.vasp_cluster import get_intelligence_summary
+        stats = get_intelligence_stats()
+        vasp_summary = get_intelligence_summary()
+        return {
+            "status": "operational",
+            "intelligence_db": stats,
+            "ofac_registry": {
+                "address_count": get_ofac_address_count(),
+                "last_refresh": get_ofac_last_refresh(),
+                "source": get_ofac_refresh_source(),
+            },
+            "static_coverage": vasp_summary,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/v1/intelligence/ofac/refresh")
+def trigger_ofac_refresh():
+    """Manually trigger an OFAC SDN registry refresh from US Treasury. Admin use only."""
+    try:
+        from engine.ofac_sanctions import refresh_ofac_from_treasury
+        result = refresh_ofac_from_treasury()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OFAC refresh failed: {e}")
+
+
+@app.get("/api/v1/intelligence/vasps")
+def list_intelligence_vasps(risk_level: Optional[str] = None, chain: Optional[str] = None):
+    """List all VASP entries in the intelligence DB with optional filtering."""
+    from backend.db.intelligence_db import list_all_vasps
+    return {"vasps": list_all_vasps(risk_level=risk_level, chain=chain)}
+
+
+@app.get("/api/v1/intelligence/mixers")
+def list_intelligence_mixers(chain: Optional[str] = None):
+    """List all mixer contracts in the intelligence DB."""
+    from backend.db.intelligence_db import list_all_mixers
+    return {"mixers": list_all_mixers(chain=chain)}
+
+
+@app.get("/api/v1/intelligence/bridges")
+def list_intelligence_bridges(chain: Optional[str] = None):
+    """List all DeFi bridge contracts in the intelligence DB."""
+    from backend.db.intelligence_db import list_all_bridges
+    return {"bridges": list_all_bridges(chain=chain)}
+
+
+@app.get("/api/v1/intelligence/lookup/{address}")
+def intelligence_lookup(address: str, chain: Optional[str] = None):
+    """
+    One-shot intelligence lookup for any address:
+    checks VASP DB, mixer contracts, DeFi bridges, and OFAC SDN registry.
+    """
+    from backend.db.intelligence_db import lookup_vasp_db, lookup_mixer_db, lookup_bridge_db
+    from engine.ofac_sanctions import screen_ofac_sanctions
+
+    vasp_hit = lookup_vasp_db(address)
+    mixer_hit = lookup_mixer_db(address)
+    bridge_hit = lookup_bridge_db(address)
+    ofac_hit = screen_ofac_sanctions(address, chain)
+
+    return {
+        "address": address,
+        "chain": chain,
+        "vasp_match": vasp_hit,
+        "mixer_match": mixer_hit,
+        "bridge_match": bridge_hit,
+        "ofac_screening": ofac_hit,
+        "is_flagged": bool(vasp_hit or mixer_hit or bridge_hit or ofac_hit.get("is_sanctioned")),
+        "highest_risk": "CRITICAL" if (mixer_hit or ofac_hit.get("is_sanctioned")) else
+                        ("HIGH" if bridge_hit else ("MEDIUM" if vasp_hit else "CLEAR")),
+    }
+

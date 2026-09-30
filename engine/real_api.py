@@ -1,11 +1,11 @@
-"""
+﻿"""
 Real Blockchain API Integration Module for TraceX / SIH26182.
 Provides live on-chain queries for Bitcoin, Ethereum/EVM, TRON, Bitquery V2, OFAC Sanctions, and CoinGecko.
 
 DATA SOURCE LABELS:
-  🟢 LIVE     = Real data from blockchain explorer APIs / OFAC SLS / CoinGecko / TronGrid / Bitquery
-  🟡 SIMULATED = Algorithmically generated benchmark (fallback when API rate-limits)
-  🔴 HARDCODED = Curated registries (VASP hot wallet clusters, known sanctions)
+  ðŸŸ¢ LIVE     = Real data from blockchain explorer APIs / OFAC SLS / CoinGecko / TronGrid / Bitquery
+  ðŸŸ¡ SIMULATED = Algorithmically generated benchmark (fallback when API rate-limits)
+  ðŸ”´ HARDCODED = Curated registries (VASP hot wallet clusters, known sanctions)
 """
 
 import os
@@ -39,14 +39,14 @@ def _get_env_key(key: str, default: str = "") -> str:
     return default
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. BITCOIN — Blockstream Esplora API (Zero Key)
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# 1. BITCOIN â€” Blockstream Esplora API (Zero Key)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_btc_data(address: str) -> Dict[str, Any]:
     """
     Fetch real Bitcoin address data from Blockstream Esplora API.
-    SOURCE: 🟢 LIVE — https://blockstream.info/api
+    SOURCE: ðŸŸ¢ LIVE â€” https://blockstream.info/api
     """
     base_url = _get_env_key("BLOCKSTREAM_BASE_URL", "https://blockstream.info/api")
     prices = get_live_prices()
@@ -60,7 +60,7 @@ def get_btc_data(address: str) -> Dict[str, Any]:
         
         if addr_resp.status_code == 404:
             return {
-                "source": "🟢 LIVE",
+                "source": "ðŸŸ¢ LIVE",
                 "api": "Blockstream Esplora",
                 "chain": "BTC",
                 "address": address,
@@ -113,7 +113,7 @@ def get_btc_data(address: str) -> Dict[str, Any]:
             })
 
         return {
-            "source": "🟢 LIVE",
+            "source": "ðŸŸ¢ LIVE",
             "api": "Blockstream Esplora",
             "chain": "BTC",
             "address": address,
@@ -133,14 +133,14 @@ def get_btc_data(address: str) -> Dict[str, Any]:
         return {"error": f"Bitcoin query error: {str(e)}", "source": "LIVE_FAIL", "explorer_url": f"https://blockstream.info/address/{address}"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2. ETHEREUM / EVM — Etherscan V2 API
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# 2. ETHEREUM / EVM â€” Etherscan V2 API
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_eth_data(address: str) -> Dict[str, Any]:
     """
     Fetch real Ethereum address balance + recent transactions from Etherscan V2.
-    SOURCE: 🟢 LIVE — https://api.etherscan.io/v2/api
+    SOURCE: ðŸŸ¢ LIVE â€” https://api.etherscan.io/v2/api
     Requires ETHERSCAN_API_KEY.
     """
     api_key = _get_env_key("ETHERSCAN_API_KEY", "")
@@ -222,7 +222,7 @@ def get_eth_data(address: str) -> Dict[str, Any]:
         ]
 
         return {
-            "source": "🟢 LIVE",
+            "source": "ðŸŸ¢ LIVE",
             "api": "Etherscan V2 (Ethereum Mainnet)",
             "chain": "ETH",
             "address": address,
@@ -240,14 +240,14 @@ def get_eth_data(address: str) -> Dict[str, Any]:
         return {"error": f"Ethereum query error: {str(e)}", "source": "LIVE_FAIL", "explorer_url": f"https://etherscan.io/address/{address}"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3. TRON & TRC-20 — TronGrid API (with TronScan Fallback)
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# 3. TRON & TRC-20 â€” TronGrid API (with TronScan Fallback)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def get_tron_data(address: str) -> Dict[str, Any]:
     """
     Fetch real TRON address data + USDT TRC-20 balance from TronGrid API.
-    SOURCE: 🟢 LIVE — https://api.trongrid.io
+    SOURCE: ðŸŸ¢ LIVE â€” https://api.trongrid.io
     Uses TRONGRID_API_KEY from environment with TRON-PRO-API-KEY header.
     """
     api_key = _get_env_key("TRONGRID_API_KEY", "")
@@ -291,7 +291,7 @@ def get_tron_data(address: str) -> Dict[str, Any]:
             total_inr = round(usdt_balance * usdt_price_inr + trx_balance * trx_price_inr, 2)
 
             return {
-                "source": "🟢 LIVE",
+                "source": "ðŸŸ¢ LIVE",
                 "api": "TronGrid (TRON Mainnet)",
                 "chain": "TRON",
                 "address": address,
@@ -322,7 +322,7 @@ def get_tron_data(address: str) -> Dict[str, Any]:
             total_usd = round(usdt_balance * usdt_price_usd + trx_balance * trx_price_usd, 2)
             total_inr = round(usdt_balance * usdt_price_inr + trx_balance * trx_price_inr, 2)
             return {
-                "source": "🟢 LIVE",
+                "source": "ðŸŸ¢ LIVE",
                 "api": "TronScan (TRON Mainnet)",
                 "chain": "TRON",
                 "address": address,
@@ -348,14 +348,14 @@ def get_tron_data(address: str) -> Dict[str, Any]:
         return {"error": f"TRON query error: {str(e)}", "source": "LIVE_FAIL", "explorer_url": f"https://tronscan.org/#/address/{address}"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 4. MULTI-CHAIN INDEXING — Bitquery V2 GraphQL API
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# 4. MULTI-CHAIN INDEXING â€” Bitquery V2 GraphQL API
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def query_bitquery_evm(address: str, network: str = "eth") -> Dict[str, Any]:
     """
     Cross-reference EVM address activity via Bitquery V2 GraphQL API.
-    SOURCE: 🟢 LIVE — https://streaming.bitquery.io/graphql
+    SOURCE: ðŸŸ¢ LIVE â€” https://streaming.bitquery.io/graphql
     Requires BITQUERY_ACCESS_TOKEN.
     """
     token = _get_env_key("BITQUERY_ACCESS_TOKEN", "")
@@ -414,7 +414,7 @@ def query_bitquery_evm(address: str, network: str = "eth") -> Dict[str, Any]:
             data = resp.json()
             if "errors" in data:
                 return {
-                    "source": "🟢 LIVE",
+                    "source": "ðŸŸ¢ LIVE",
                     "api": "Bitquery V2 GraphQL",
                     "status": "CONNECTED",
                     "address": address,
@@ -447,7 +447,7 @@ def query_bitquery_evm(address: str, network: str = "eth") -> Dict[str, Any]:
                 })
 
             return {
-                "source": "🟢 LIVE",
+                "source": "ðŸŸ¢ LIVE",
                 "api": "Bitquery V2 GraphQL",
                 "status": "CONNECTED",
                 "address": address,
@@ -460,26 +460,26 @@ def query_bitquery_evm(address: str, network: str = "eth") -> Dict[str, Any]:
         return {"error": f"Bitquery query error: {str(e)}", "source": "LIVE_FAIL"}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. AML & SANCTIONS — Official OFAC Sanctions List Service (SLS)
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# 5. AML & SANCTIONS â€” Official OFAC Sanctions List Service (SLS)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def check_aml_sanctions(address: str, chain: Optional[str] = None) -> Dict[str, Any]:
     """
     Screen address against official OFAC SDN digital currency list.
-    SOURCE: 🟢 LIVE — US Department of the Treasury (OFAC SLS)
+    SOURCE: ðŸŸ¢ LIVE â€” US Department of the Treasury (OFAC SLS)
     """
     return screen_ofac_sanctions(address, chain)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 6. CHAINABUSE — Fraud Reports
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# 6. CHAINABUSE â€” Fraud Reports
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def check_chainabuse(address: str) -> Dict[str, Any]:
     """
     Check Chainabuse for reported fraudulent activity.
-    SOURCE: 🟢 LIVE — https://www.chainabuse.com
+    SOURCE: ðŸŸ¢ LIVE â€” https://www.chainabuse.com
     """
     key = _get_env_key("CHAINABUSE_API_KEY", "")
     headers = dict(HEADERS)
@@ -493,7 +493,7 @@ def check_chainabuse(address: str) -> Dict[str, Any]:
             reports = data.get("reports", []) if isinstance(data, dict) else []
             total = data.get("totalCount", len(reports))
             return {
-                "source": "🟢 LIVE",
+                "source": "ðŸŸ¢ LIVE",
                 "api": "Chainabuse (Public Scam Reports)",
                 "address": address,
                 "report_count": total,
@@ -502,7 +502,7 @@ def check_chainabuse(address: str) -> Dict[str, Any]:
             }
         else:
             return {
-                "source": "🟢 LIVE (Public Registry)",
+                "source": "ðŸŸ¢ LIVE (Public Registry)",
                 "api": "Chainabuse",
                 "address": address,
                 "report_count": 0,
@@ -511,7 +511,7 @@ def check_chainabuse(address: str) -> Dict[str, Any]:
             }
     except Exception:
         return {
-            "source": "🟢 LIVE (Public Registry)",
+            "source": "ðŸŸ¢ LIVE (Public Registry)",
             "api": "Chainabuse",
             "address": address,
             "report_count": 0,
@@ -520,35 +520,342 @@ def check_chainabuse(address: str) -> Dict[str, Any]:
         }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+# =============================================================================
+# PRIORITY 3 INTELLIGENCE UPGRADE — Multi-Provider Fallback Chains
+# =============================================================================
+
+# ─── SOLANA ON-CHAIN (3-tier fallback) ───────────────────────────────────────
+
+def get_solana_data(address: str) -> Dict[str, Any]:
+    """
+    Fetch Solana account transaction history.
+    PRIMARY:    Solana mainnet JSON-RPC (public, no key required)
+    FALLBACK 1: Solscan Public API (no key, rate-limited)
+    FALLBACK 2: Helius RPC (if HELIUS_API_KEY set)
+    FALLBACK 3: Simulated stub with clear label
+    SOURCE: LIVE / SIMULATED
+    """
+    import os
+
+    rpc_url = os.getenv("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com")
+    helius_key = _get_env_key("HELIUS_API_KEY", "")
+
+    # --- PRIMARY: Solana Public RPC getSignaturesForAddress ---
+    try:
+        payload = {
+            "jsonrpc": "2.0", "id": 1,
+            "method": "getSignaturesForAddress",
+            "params": [address, {"limit": 25, "commitment": "finalized"}]
+        }
+        resp = requests.post(rpc_url, json=payload, headers=HEADERS, timeout=TIMEOUT)
+        if resp.status_code == 200:
+            data = resp.json()
+            if "error" not in data and data.get("result") is not None:
+                sigs = data["result"] or []
+                # Get account info
+                acc_payload = {
+                    "jsonrpc": "2.0", "id": 2,
+                    "method": "getAccountInfo",
+                    "params": [address, {"encoding": "base58"}]
+                }
+                acc_resp = requests.post(rpc_url, json=acc_payload, headers=HEADERS, timeout=TIMEOUT)
+                acc_info = {}
+                if acc_resp.status_code == 200:
+                    acc_data = acc_resp.json().get("result", {}) or {}
+                    acc_val = acc_data.get("value", {}) or {}
+                    acc_info = {
+                        "lamports": acc_val.get("lamports", 0),
+                        "sol_balance": round((acc_val.get("lamports", 0) or 0) / 1e9, 6),
+                        "owner": acc_val.get("owner", ""),
+                        "executable": acc_val.get("executable", False),
+                    }
+
+                return {
+                    "source": "LIVE",
+                    "api": "Solana Mainnet RPC (getSignaturesForAddress)",
+                    "address": address,
+                    "chain": "SOL",
+                    "rpc_url": rpc_url,
+                    "transaction_count": len(sigs),
+                    "recent_signatures": [
+                        {
+                            "signature": s.get("signature"),
+                            "slot": s.get("slot"),
+                            "block_time": s.get("blockTime"),
+                            "err": s.get("err"),
+                            "memo": s.get("memo"),
+                        }
+                        for s in sigs[:15]
+                    ],
+                    "account_info": acc_info,
+                    "solscan_url": f"https://solscan.io/account/{address}",
+                }
+    except Exception as e:
+        pass  # Fall to next provider
+
+    # --- FALLBACK 1: Helius RPC (enhanced transaction parsing) ---
+    if helius_key:
+        try:
+            helius_url = f"https://mainnet.helius-rpc.com/?api-key={helius_key}"
+            payload = {
+                "jsonrpc": "2.0", "id": 1,
+                "method": "getSignaturesForAddress",
+                "params": [address, {"limit": 20}]
+            }
+            resp = requests.post(helius_url, json=payload, headers=HEADERS, timeout=TIMEOUT)
+            if resp.status_code == 200:
+                data = resp.json()
+                sigs = data.get("result", []) or []
+                return {
+                    "source": "LIVE",
+                    "api": "Helius Enhanced RPC",
+                    "address": address,
+                    "chain": "SOL",
+                    "transaction_count": len(sigs),
+                    "recent_signatures": [s.get("signature") for s in sigs[:10]],
+                    "solscan_url": f"https://solscan.io/account/{address}",
+                }
+        except Exception:
+            pass
+
+    # --- FALLBACK 2: Solscan Public API ---
+    try:
+        url = f"https://public-api.solscan.io/account/transactions?account={address}&limit=20&offset=0"
+        resp = requests.get(url, headers={**HEADERS, "Accept": "application/json"}, timeout=TIMEOUT)
+        if resp.status_code == 200:
+            txs = resp.json() or []
+            if isinstance(txs, list):
+                return {
+                    "source": "LIVE",
+                    "api": "Solscan Public API",
+                    "address": address,
+                    "chain": "SOL",
+                    "transaction_count": len(txs),
+                    "transactions": [
+                        {
+                            "signature": t.get("txHash"),
+                            "block_time": t.get("blockTime"),
+                            "fee": t.get("fee"),
+                            "status": t.get("status"),
+                        }
+                        for t in txs[:10]
+                    ],
+                    "solscan_url": f"https://solscan.io/account/{address}",
+                }
+    except Exception:
+        pass
+
+    # --- FALLBACK 3: Simulated stub ---
+    return {
+        "source": "SIMULATED",
+        "api": "Solana (All providers unreachable)",
+        "address": address,
+        "chain": "SOL",
+        "note": (
+            "Solana RPC and Solscan are unreachable. "
+            "Configure SOLANA_RPC_URL or HELIUS_API_KEY for live data. "
+            "Public endpoint: https://api.mainnet-beta.solana.com"
+        ),
+        "solscan_url": f"https://solscan.io/account/{address}",
+        "transaction_count": 0,
+    }
+
+
+# ─── BITCOIN — 3-tier fallback ─────────────────────────────────────────────────
+
+def get_btc_data_with_fallback(address: str) -> Dict[str, Any]:
+    """
+    Fetch Bitcoin address data with multi-provider fallback.
+    PRIMARY:    Blockstream Esplora (public, reliable)
+    FALLBACK 1: Mempool.space API (fee data + UTXO info)
+    FALLBACK 2: Blockchain.info (legacy, rate-limited)
+    FALLBACK 3: Simulated stub
+    """
+    # PRIMARY: Blockstream
+    try:
+        base = _get_env_key("BLOCKSTREAM_BASE_URL", "https://blockstream.info/api")
+        addr_url = f"{base}/address/{address}"
+        r = requests.get(addr_url, headers=HEADERS, timeout=TIMEOUT)
+        if r.status_code == 200:
+            d = r.json()
+            stats = d.get("chain_stats", {})
+            txs_r = requests.get(f"{addr_url}/txs", headers=HEADERS, timeout=TIMEOUT)
+            txs = txs_r.json()[:10] if txs_r.status_code == 200 else []
+            return {
+                "source": "LIVE",
+                "api": "Blockstream Esplora",
+                "address": address,
+                "chain": "BTC",
+                "funded_txo_count": stats.get("funded_txo_count", 0),
+                "spent_txo_count": stats.get("spent_txo_count", 0),
+                "tx_count": stats.get("tx_count", 0),
+                "total_received_sat": stats.get("funded_txo_sum", 0),
+                "total_sent_sat": stats.get("spent_txo_sum", 0),
+                "balance_sat": stats.get("funded_txo_sum", 0) - stats.get("spent_txo_sum", 0),
+                "balance_btc": round(
+                    (stats.get("funded_txo_sum", 0) - stats.get("spent_txo_sum", 0)) / 1e8, 8
+                ),
+                "recent_txs": [{"txid": t.get("txid"), "value": t.get("value")} for t in txs],
+                "blockchair_url": f"https://blockchair.com/bitcoin/address/{address}",
+            }
+    except Exception:
+        pass
+
+    # FALLBACK 1: Mempool.space
+    try:
+        r = requests.get(f"https://mempool.space/api/address/{address}", headers=HEADERS, timeout=TIMEOUT)
+        if r.status_code == 200:
+            d = r.json()
+            cs = d.get("chain_stats", {})
+            return {
+                "source": "LIVE",
+                "api": "Mempool.space",
+                "address": address,
+                "chain": "BTC",
+                "tx_count": cs.get("tx_count", 0),
+                "balance_sat": cs.get("funded_txo_sum", 0) - cs.get("spent_txo_sum", 0),
+                "balance_btc": round(
+                    (cs.get("funded_txo_sum", 0) - cs.get("spent_txo_sum", 0)) / 1e8, 8
+                ),
+                "mempool_url": f"https://mempool.space/address/{address}",
+            }
+    except Exception:
+        pass
+
+    # FALLBACK 2: Blockchain.info
+    try:
+        r = requests.get(
+            f"https://blockchain.info/rawaddr/{address}?limit=5",
+            headers=HEADERS, timeout=TIMEOUT
+        )
+        if r.status_code == 200:
+            d = r.json()
+            return {
+                "source": "LIVE",
+                "api": "Blockchain.info",
+                "address": address,
+                "chain": "BTC",
+                "tx_count": d.get("n_tx", 0),
+                "total_received_sat": d.get("total_received", 0),
+                "total_sent_sat": d.get("total_sent", 0),
+                "balance_sat": d.get("final_balance", 0),
+                "balance_btc": round(d.get("final_balance", 0) / 1e8, 8),
+            }
+    except Exception:
+        pass
+
+    return {"source": "SIMULATED", "chain": "BTC", "address": address,
+            "note": "All BTC providers unreachable. Check network connectivity."}
+
+
+# ─── ETHEREUM/EVM — 4-tier fallback ──────────────────────────────────────────
+
+def get_eth_data_with_fallback(address: str, chain: str = "ETH") -> Dict[str, Any]:
+    """
+    Fetch EVM address data with multi-provider fallback.
+    PRIMARY:    Etherscan v2 API (key required)
+    FALLBACK 1: Bitquery V2 GraphQL (token required)
+    FALLBACK 2: Blockscout Public API (no key, EU-hosted)
+    FALLBACK 3: Simulated stub
+    """
+    chain_upper = chain.upper()
+
+    # PRIMARY: Etherscan (already implemented in get_eth_data)
+    try:
+        result = get_eth_data(address)
+        if result.get("source") == "LIVE" or "LIVE" in str(result.get("source", "")):
+            return result
+    except Exception:
+        pass
+
+    # FALLBACK 1: Bitquery V2
+    try:
+        bq = query_bitquery_evm(address, chain_upper.lower()[:3])
+        if bq.get("status") == "CONNECTED" and bq.get("transfers_count", 0) > 0:
+            bq["source"] = "LIVE (Bitquery Fallback)"
+            return bq
+    except Exception:
+        pass
+
+    # FALLBACK 2: Blockscout Public API
+    try:
+        blockscout_bases = {
+            "ETH": "https://eth.blockscout.com/api",
+            "BNB": "https://bsc.blockscout.com/api",
+            "POLYGON": "https://polygon.blockscout.com/api",
+        }
+        bs_base = blockscout_bases.get(chain_upper)
+        if bs_base:
+            r = requests.get(
+                f"{bs_base}?module=account&action=txlist&address={address}&page=1&offset=10",
+                headers=HEADERS, timeout=TIMEOUT
+            )
+            if r.status_code == 200:
+                data = r.json()
+                txs = data.get("result", []) or []
+                if isinstance(txs, list):
+                    return {
+                        "source": "LIVE",
+                        "api": f"Blockscout ({chain_upper})",
+                        "address": address,
+                        "chain": chain_upper,
+                        "tx_count": len(txs),
+                        "transactions": [
+                            {
+                                "hash": t.get("hash"),
+                                "from": t.get("from"),
+                                "to": t.get("to"),
+                                "value_wei": t.get("value"),
+                                "block": t.get("blockNumber"),
+                                "timestamp": t.get("timeStamp"),
+                            }
+                            for t in txs[:10]
+                        ],
+                        "explorer_url": f"https://eth.blockscout.com/address/{address}",
+                    }
+    except Exception:
+        pass
+
+    return {"source": "SIMULATED", "chain": chain_upper, "address": address,
+            "note": f"All {chain_upper} providers unreachable. Configure ETHERSCAN_API_KEY."}
+
+# =============================================================================
 # MASTER FETCH — Unified Multi-Chain On-Chain Intelligence
-# ─────────────────────────────────────────────────────────────────────────────
+# =============================================================================
 
 def fetch_real_data(address: str, chain: str) -> Dict[str, Any]:
     """
-    Fetch all available real on-chain data for a suspect address across all providers.
+    Fetch all available real on-chain data for a suspect address.
+    Uses multi-provider fallback chains for BTC, ETH/EVM, TRON, SOL.
+    Now includes Solana support (Priority 3 upgrade).
     """
+    chain_upper = (chain or "ETH").upper()
     result = {
         "address": address,
-        "chain": chain,
+        "chain": chain_upper,
         "blockchain_data": None,
-        "aml_check": check_aml_sanctions(address, chain),
+        "aml_check": check_aml_sanctions(address, chain_upper),
         "chainabuse": check_chainabuse(address),
         "price_feed": get_live_prices(),
     }
 
-    if chain in ["ETH", "BNB", "POLYGON"]:
-        result["blockchain_data"] = get_eth_data(address)
+    if chain_upper in ("ETH", "BNB", "POLYGON"):
+        result["blockchain_data"] = get_eth_data_with_fallback(address, chain_upper)
         result["bitquery"] = query_bitquery_evm(address, "eth")
-    elif chain == "BTC":
-        result["blockchain_data"] = get_btc_data(address)
-    elif chain == "TRON":
+    elif chain_upper == "BTC":
+        result["blockchain_data"] = get_btc_data_with_fallback(address)
+    elif chain_upper == "TRON":
         result["blockchain_data"] = get_tron_data(address)
+    elif chain_upper == "SOL":
+        result["blockchain_data"] = get_solana_data(address)
     else:
         result["blockchain_data"] = {
-            "source": "🟡 SIMULATED",
-            "note": f"Live explorer not configured for {chain}. Please configure RPC endpoint.",
-            "chain": chain,
+            "source": "SIMULATED",
+            "note": f"Live explorer not configured for chain: {chain_upper}.",
+            "chain": chain_upper,
+            "address": address,
         }
 
     return result

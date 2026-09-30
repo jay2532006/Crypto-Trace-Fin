@@ -1,6 +1,6 @@
-// @ts-nocheck
-// @ts-nocheck
 'use client';
+// @ts-nocheck
+// @ts-nocheck
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';

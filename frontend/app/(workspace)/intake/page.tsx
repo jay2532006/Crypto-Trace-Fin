@@ -1,5 +1,5 @@
+'use client';
 import { apiClient } from '@/lib/api-client';
-"use client";
 
 import * as React from "react";
 import { 

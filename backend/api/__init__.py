@@ -6,6 +6,8 @@ from .evidence_routes import router as evidence_router
 from .auth_routes import router as auth_router
 from .intake_routes import router as intake_router
 from .copilot_routes import router as copilot_router
+from .system_routes import router as system_router
+from .ws_routes import router as ws_router
 
 __all__ = [
     "case_router",
@@ -15,4 +17,7 @@ __all__ = [
     "auth_router",
     "intake_router",
     "copilot_router",
+    "system_router",
+    "ws_router",
 ]
+

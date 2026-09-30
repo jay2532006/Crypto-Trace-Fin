@@ -238,12 +238,19 @@ export function InvestigationView({ activeCase, setDrawer, openTransaction }: In
         <section className="kestrel-panel">
           <div className="kestrel-panel-head"><div><h2>VASP Intelligence</h2><p>Candidate exit clustering, not ownership proof</p></div></div>
           <div className="stack-list">
-            {vasps.map((candidate) => (
-              <button key={candidate.candidate_id} className="list-item-button list-item-split" onClick={() => setDrawer({ kind: "vasp", candidate })}>
-                <div><strong>{candidate.name}</strong><span className="mono table-muted">{formatTechnicalId(candidate.address, 12, 4)}</span></div>
-                <div className="list-item-align-right"><Badge tone={candidate.label_status.toLowerCase()}>{candidate.label_status}</Badge><span className="text-accent">{Math.round(candidate.confidence * 100)}% · hop {candidate.hop_distance}</span></div>
-              </button>
-            ))}
+            {vasps.map((candidate, idx) => {
+              const labelStatus = candidate.label_status || "INFERRED";
+              const conf = typeof candidate.confidence === "number" ? candidate.confidence : 0.8;
+              const hop = candidate.hop_distance ?? 1;
+              const addr = candidate.address || candidate.hot_wallet || "";
+              const name = candidate.name || candidate.vasp_name || `Candidate ${idx + 1}`;
+              return (
+                <button key={candidate.candidate_id || `cand-${idx}`} className="list-item-button list-item-split" onClick={() => setDrawer({ kind: "vasp", candidate })}>
+                  <div><strong>{name}</strong><span className="mono table-muted">{formatTechnicalId(addr, 12, 4)}</span></div>
+                  <div className="list-item-align-right"><Badge tone={labelStatus.toLowerCase()}>{labelStatus}</Badge><span className="text-accent">{Math.round(conf * 100)}% · hop {hop}</span></div>
+                </button>
+              );
+            })}
           </div>
         </section>
 

@@ -5,6 +5,7 @@ import { mockApi } from "../services/mockApi";
 import { Badge } from "../components/common/Badge";
 import { AttributionTrace } from "../components/vasp/AttributionTrace";
 import { SkeletonLoader, ErrorNotice } from "../components/common/StateFeedback";
+import { formatTechnicalId } from "../utils/formatters";
 
 interface VaspViewProps {
   setDrawer: (drawer: any) => void;
@@ -78,15 +79,15 @@ export function VaspView({ setDrawer }: VaspViewProps) {
                   }}
                 >
                   <div>
-                    <strong style={{ display: "block", fontSize: "14px", color: "var(--text)" }}>{candidate.name}</strong>
+                    <strong style={{ display: "block", fontSize: "14px", color: "var(--text)" }}>{candidate.name || candidate.vasp_name}</strong>
                     <span className="mono" style={{ fontSize: "11px", color: "var(--text-3)" }}>
-                      {candidate.address.slice(0, 10)}...{candidate.address.slice(-6)}
+                      {formatTechnicalId(candidate.address || candidate.hot_wallet, 10, 6)}
                     </span>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <Badge tone={candidate.label_status.toLowerCase()}>{candidate.label_status}</Badge>
+                    <Badge tone={(candidate.label_status || "inferred").toLowerCase()}>{candidate.label_status || "INFERRED"}</Badge>
                     <span style={{ display: "block", fontSize: "11px", color: "var(--accent-2)", marginTop: "4px" }}>
-                      {Math.round(candidate.confidence * 100)}% · Hop {candidate.hop_distance}
+                      {Math.round((candidate.confidence ?? 0.8) * 100)}% · Hop {candidate.hop_distance ?? 1}
                     </span>
                   </div>
                 </button>

@@ -23,6 +23,8 @@ class BoundedTraceRequest(BaseModel):
     case_id: Optional[str] = None
     max_hops: int = 5
     mode: Optional[str] = "DEMO"  # DEMO or LIVE
+    direction: Optional[str] = "FORWARD"  # FORWARD, BACKWARD, BIDIRECTIONAL (§1.4)
+    max_backward_hops: Optional[int] = 2
 
 
 @router.post("/trace")
@@ -31,13 +33,18 @@ def execute_trace(request: Request, req: BoundedTraceRequest, current_user: Dict
     """
     Executes bounded deterministic multi-hop tracing (Rate limited: 20/min).
     Runs MULE_NETWORK, AdaptiveVASPScorer, and Heuristic Recovery Estimator.
+    Supports forward, backward (fan-in), and bidirectional tracing per §1.4.
     """
     address = (req.address or "").strip()
     if not address:
         raise HTTPException(status_code=422, detail="Target address is required.")
 
     case_id = req.case_id or f"CR-2026-AUTO-{address[-6:].upper()}"
-    constraints = TraceConstraints(max_hops=req.max_hops)
+    constraints = TraceConstraints(
+        max_hops=req.max_hops,
+        direction=req.direction or "FORWARD",
+        max_backward_hops=req.max_backward_hops or 2,
+    )
 
     result = bounded_tracer.trace(
         start_address=address,

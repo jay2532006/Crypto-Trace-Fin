@@ -112,8 +112,8 @@ class AdaptiveVASPScorer:
             )
         )
 
-        # b) Hop Decay
-        hop_penalty = max(0.0, (hop_count - 1) * 0.08)
+        # b) Hop Decay (§5.1: Capped at -0.20 to prevent deep valid traces from collapsing to non-answers)
+        hop_penalty = min(0.20, max(0.0, (hop_count - 1) * 0.08))
         score_components["b_hop_decay"] = -hop_penalty
         scoring_steps.append(
             ScoringStep(
@@ -121,7 +121,7 @@ class AdaptiveVASPScorer:
                 input_value=hop_count,
                 weight=-hop_penalty,
                 output_contribution=-hop_penalty * 100,
-                reasoning=f"Hop distance {hop_count} applies mathematical confidence decay.",
+                reasoning=f"Hop distance {hop_count} applies mathematical confidence decay (capped at -0.20).",
             )
         )
 
@@ -192,13 +192,26 @@ class AdaptiveVASPScorer:
         )
         clamped_score = max(5, min(95, int(round(raw_score))))
 
-        # ── Label Classification & Confidence Band ──
+        # ── Label Classification & Confidence Band (§5.1) ──
         if is_fiu_reg and is_exact_wallet_match and not mixer_detected and hop_count <= 2:
             label_type: LabelType = "VERIFIED"
             confidence_band: ConfidenceLevel = "HIGH"
         elif clamped_score >= 60 and not mixer_detected:
             label_type = "INFERRED"
             confidence_band = "MEDIUM" if hop_count > 1 else "HIGH"
+        elif 40 <= clamped_score < 60 and hop_count >= 3 and not mixer_detected:
+            # §5.1: DEEP_TRACE_PARTIAL band retains deep cluster matches as INFERRED leads
+            label_type = "INFERRED"
+            confidence_band = "LOW"
+            scoring_steps.append(
+                ScoringStep(
+                    step_name="deep_trace_partial",
+                    input_value=hop_count,
+                    weight=0.0,
+                    output_contribution=0.0,
+                    reasoning=f"Deep trace ({hop_count} hops) identified VASP cluster with partial confidence (score {clamped_score}). Retained as INFERRED lead rather than UNRESOLVED.",
+                )
+            )
         else:
             label_type = "UNRESOLVED"
             confidence_band = "LOW"
@@ -228,6 +241,35 @@ class AdaptiveVASPScorer:
             nodal_officer_email=vasp_info.get("nodal_officer_email", "nodal@exchange.com"),
             fiu_status=vasp_info.get("fiu_registration_status", "UNREGISTERED"),
         )
+
+    def score_all_candidates(
+        self,
+        candidate_keys: List[str],
+        trace_result: Dict[str, Any],
+        hop_count: int,
+        is_exact_wallet_match: bool = False,
+        mixer_detected: bool = False,
+        recent_activity_days: int = 2,
+        data_completeness_pct: float = 100.0,
+    ) -> List[AttributionScore]:
+        """
+        §5.2: Scores all candidate VASPs for ambiguous cluster hits and ranks them descending.
+        Empowers investigators to draft freeze notices to all plausible co-custodians.
+        """
+        scores: List[AttributionScore] = []
+        for vk in candidate_keys:
+            score = self.score_candidate(
+                vasp_key=vk,
+                trace_result=trace_result,
+                hop_count=hop_count,
+                is_exact_wallet_match=is_exact_wallet_match,
+                mixer_detected=mixer_detected,
+                recent_activity_days=recent_activity_days,
+                data_completeness_pct=data_completeness_pct,
+            )
+            scores.append(score)
+        scores.sort(key=lambda s: s.score, reverse=True)
+        return scores
 
 
 adaptive_vasp_scorer = AdaptiveVASPScorer()

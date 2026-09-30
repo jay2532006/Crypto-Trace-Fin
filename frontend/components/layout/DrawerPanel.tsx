@@ -339,29 +339,38 @@ function FindingDetail({ finding, openTransaction }: { finding: PatternFinding; 
 }
 
 function VaspDetail({ candidate }: { candidate: VASPCluster }) {
+  const labelStatus = candidate?.label_status || "INFERRED";
+  const chainName = candidate?.chain || "eth";
+  const conf = typeof candidate?.confidence === "number" ? candidate.confidence : 0.8;
+  const name = candidate?.name || candidate?.vasp_name || "VASP Candidate";
+  const addr = candidate?.address || candidate?.hot_wallet || "Unknown Address";
+  const confBand = candidate?.confidence_band || "MEDIUM";
+  const hop = candidate?.hop_distance ?? 1;
+  const source = candidate?.label_source || "STATIC_SEED";
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-        <Badge tone={candidate.label_status.toLowerCase()}>{candidate.label_status}</Badge>
-        <Badge tone={candidate.chain}>{candidate.chain}</Badge>
-        <Badge tone="green">Band: {candidate.confidence_band}</Badge>
+        <Badge tone={labelStatus.toLowerCase()}>{labelStatus}</Badge>
+        <Badge tone={chainName}>{chainName}</Badge>
+        <Badge tone="green">Band: {confBand}</Badge>
       </div>
 
       <dl>
         <dt>Candidate Name</dt>
-        <dd><strong>{candidate.name}</strong></dd>
+        <dd><strong>{name}</strong></dd>
 
         <dt>Address / Cluster</dt>
-        <dd className="mono" style={{ fontSize: "12px", color: "var(--accent-2)" }}>{candidate.address}</dd>
+        <dd className="mono" style={{ fontSize: "12px", color: "var(--accent-2)" }}>{addr}</dd>
 
         <dt>Attribution Score</dt>
-        <dd><strong>{Math.round(candidate.confidence * 100)}%</strong> ({candidate.confidence.toFixed(2)})</dd>
+        <dd><strong>{Math.round(conf * 100)}%</strong> ({conf.toFixed(2)})</dd>
 
         <dt>Hop Distance</dt>
-        <dd>Hop {candidate.hop_distance}</dd>
+        <dd>Hop {hop}</dd>
 
         <dt>Label Source</dt>
-        <dd className="mono">{candidate.label_source}</dd>
+        <dd className="mono">{source}</dd>
       </dl>
 
       <div style={{

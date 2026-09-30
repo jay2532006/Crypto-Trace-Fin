@@ -1,9 +1,12 @@
 // @ts-nocheck
 "use client";
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { OverviewView } from "@/views/OverviewView";
 
 export default function DashboardPage() {
+  const router = useRouter();
+
   const mockCase = { 
     case_id: "CASE-001", 
     status: "Active",
@@ -15,5 +18,18 @@ export default function DashboardPage() {
     fraud_amount_inr: 720500,
     reported_wallet: "0x71c8fb9284285741829e05e55099e0344d9f1091"
   };
-  return <OverviewView activeCase={mockCase} onNavigate={() => {}} openTransaction={async () => {}} uiMode="kestrel" />;
+
+  const handleNavigate = (route: string) => {
+    if (route === "overview") router.push("/dashboard");
+    else router.push(`/${route}`);
+  };
+
+  return (
+    <OverviewView
+      activeCase={mockCase}
+      onNavigate={handleNavigate}
+      openTransaction={async () => {}}
+      uiMode="kestrel"
+    />
+  );
 }

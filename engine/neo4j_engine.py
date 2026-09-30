@@ -1,7 +1,7 @@
 """
-TraceX — Neo4j Aura Cloud Graph Engine
-Enterprise Blockchain Graph Intelligence & Cypher Forensics
-Connects to Neo4j Aura (Instance: VINI [Virtual Asset Investigation & Network Intelligence] / afbde657)
+TraceX — Graph Forensics Engine
+Unified Graph Interface: Defaults to local embedded KùzuDB (Zero Rate Limits, High Performance)
+with optional fallback to cloud-hosted Neo4j Aura if explicitly requested.
 """
 
 import os
@@ -9,52 +9,62 @@ import time
 import logging
 import re
 from typing import Dict, Any, List, Optional
-from neo4j import GraphDatabase, Driver
+from engine.kuzu_engine import (
+    check_kuzu_status,
+    sync_trace_to_kuzu,
+    execute_cypher as kuzu_execute_cypher,
+    init_kuzu_schema,
+    get_subgraph as kuzu_get_subgraph
+)
 
-logger = logging.getLogger("tracex.neo4j")
+logger = logging.getLogger("tracex.graph")
 
-# Credentials from environment or defaults
-NEO4J_URI = os.getenv("NEO4J_URI", "neo4j+s://afbde657.databases.neo4j.io")
-NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "afbde657")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "hBT80gGZ4iWQWpBevaQXfCTDFWvSoFgHNj7zNSYzuOg")
-AURA_INSTANCEID = os.getenv("AURA_INSTANCEID", "afbde657")
-AURA_INSTANCENAME = os.getenv("AURA_INSTANCENAME", "VINI")
-VINI_FULL_NAME = os.getenv("VINI_FULL_NAME", "Virtual Asset Investigation & Network Intelligence")
+GRAPH_ENGINE = os.getenv("GRAPH_ENGINE", "kuzu").lower()
 
-_driver: Optional[Driver] = None
+# Legacy Neo4j Credentials (Optional fallback)
+NEO4J_URI = os.getenv("NEO4J_URI", "")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+AURA_INSTANCEID = os.getenv("AURA_INSTANCEID", "local-kuzu")
+AURA_INSTANCENAME = os.getenv("AURA_INSTANCENAME", "KùzuDB-Forensic-Graph")
+VINI_FULL_NAME = os.getenv("VINI_FULL_NAME", "Virtual Asset Investigation & Network Intelligence (KùzuDB Local)")
+
+_neo4j_driver = None
 
 
-def get_driver() -> Optional[Driver]:
-    """Obtain or initialize singleton Neo4j driver with auto-reconnect."""
-    global _driver
-    if _driver is not None:
-        try:
-            return _driver
-        except Exception:
-            _driver = None
-
+def get_driver():
+    """Obtain Neo4j driver only if explicitly configured in neo4j mode."""
+    global _neo4j_driver
+    if GRAPH_ENGINE != "neo4j":
+        return None
+    if _neo4j_driver is not None:
+        return _neo4j_driver
     if not NEO4J_URI or not NEO4J_PASSWORD:
         return None
-
     try:
-        _driver = GraphDatabase.driver(
+        from neo4j import GraphDatabase
+        _neo4j_driver = GraphDatabase.driver(
             NEO4J_URI,
             auth=(NEO4J_USERNAME, NEO4J_PASSWORD),
             max_connection_lifetime=30 * 60,
             max_connection_pool_size=50,
             connection_acquisition_timeout=15.0
         )
-        return _driver
+        return _neo4j_driver
     except Exception as e:
         logger.error(f"Failed to initialize Neo4j driver: {e}")
         return None
 
 
-def init_neo4j_schema():
-    """Create uniqueness constraints and full-text indexes for forensics."""
+def init_neo4j_schema() -> bool:
+    """Initialize graph schema constraints and tables."""
+    if GRAPH_ENGINE != "neo4j":
+        return init_kuzu_schema()
+
     driver = get_driver()
     if not driver:
-        return False
+        # Fall back to KùzuDB schema if Neo4j driver is unavailable
+        return init_kuzu_schema()
     try:
         with driver.session() as session:
             session.run("CREATE CONSTRAINT wallet_addr_unique IF NOT EXISTS FOR (w:Wallet) REQUIRE w.address IS UNIQUE")
@@ -62,21 +72,21 @@ def init_neo4j_schema():
             session.run("CREATE CONSTRAINT case_id_unique IF NOT EXISTS FOR (c:Case) REQUIRE c.case_id IS UNIQUE")
         return True
     except Exception as e:
-        logger.warning(f"Schema initialization warning: {e}")
-        return False
+        logger.warning(f"Neo4j schema initialization warning: {e}. Defaulting to KùzuDB.")
+        return init_kuzu_schema()
 
 
 def check_neo4j_status() -> Dict[str, Any]:
-    """Verify live connectivity and fetch graph telemetry."""
+    """Verify connectivity and fetch graph telemetry (defaults to KùzuDB)."""
+    if GRAPH_ENGINE != "neo4j":
+        return check_kuzu_status()
+
     driver = get_driver()
     if not driver:
-        return {
-            "status": "offline",
-            "error": "Driver not initialized",
-            "instance_name": AURA_INSTANCENAME,
-            "full_name": VINI_FULL_NAME,
-            "instance_id": AURA_INSTANCEID,
-        }
+        # Gracefully return Kùzu telemetry if Neo4j is offline or not configured
+        kuzu_stat = check_kuzu_status()
+        kuzu_stat["neo4j_fallback"] = "Neo4j driver inactive; active on local KùzuDB"
+        return kuzu_stat
 
     t0 = time.time()
     try:
@@ -84,13 +94,13 @@ def check_neo4j_status() -> Dict[str, Any]:
         with driver.session() as session:
             res_nodes = session.run("MATCH (n) RETURN count(n) AS node_count")
             node_count = res_nodes.single()["node_count"]
-
             res_rels = session.run("MATCH ()-[r]->() RETURN count(r) AS rel_count")
             rel_count = res_rels.single()["rel_count"]
 
         latency_ms = round((time.time() - t0) * 1000, 1)
         return {
             "status": "connected",
+            "engine": "Neo4j Aura Cloud",
             "instance_name": AURA_INSTANCENAME,
             "full_name": VINI_FULL_NAME,
             "instance_id": AURA_INSTANCEID,
@@ -101,24 +111,23 @@ def check_neo4j_status() -> Dict[str, Any]:
             "cloud": "Neo4j Aura Cloud",
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "error": str(e),
-            "instance_name": AURA_INSTANCENAME,
-            "full_name": VINI_FULL_NAME,
-            "instance_id": AURA_INSTANCEID,
-            "latency_ms": round((time.time() - t0) * 1000, 1)
-        }
+        logger.warning(f"Neo4j connectivity failed ({e}). Returning local KùzuDB status.")
+        kuzu_stat = check_kuzu_status()
+        kuzu_stat["neo4j_error"] = str(e)
+        return kuzu_stat
 
 
 def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Ingest a complete cryptographic trace into Neo4j Aura.
-    Creates Case, Wallets, Transactions, and Terminal VASP nodes.
+    Ingest a complete cryptographic trace into the active graph engine.
+    Routes to KùzuDB by default, or Neo4j if configured.
     """
+    if GRAPH_ENGINE != "neo4j":
+        return sync_trace_to_kuzu(trace_data)
+
     driver = get_driver()
     if not driver:
-        return {"success": False, "error": "No Neo4j connection"}
+        return sync_trace_to_kuzu(trace_data)
 
     case_id = trace_data.get("case_id") or f"TRACE-{int(time.time())}"
     chain = trace_data.get("chain", "ETH")
@@ -130,7 +139,6 @@ def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         with driver.session() as session:
-            # 1. Create or update Case node
             session.run("""
                 MERGE (c:Case {case_id: $case_id})
                 SET c.chain = $chain,
@@ -146,7 +154,6 @@ def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
                 "vasp_name": vasp_name
             })
 
-            # 2. Ingest Wallet nodes
             for n in nodes:
                 addr = n.get("id") or n.get("address")
                 if not addr:
@@ -174,7 +181,6 @@ def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
                     "case_id": case_id
                 })
 
-            # 3. Ingest Transaction Relationships
             for e in edges:
                 src = e.get("source") or e.get("from")
                 tgt = e.get("target") or e.get("to")
@@ -197,7 +203,6 @@ def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
                     "hop": int(e.get("hop", 1))
                 })
 
-            # 4. Ingest Terminal VASP Entity and Link Deposit Address
             if vasp_name and nearest_vasp:
                 deposit_addr = nearest_vasp.get("deposit_address")
                 session.run("""
@@ -233,6 +238,7 @@ def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
 
         return {
             "success": True,
+            "engine": "Neo4j Aura Cloud",
             "case_id": case_id,
             "nodes_ingested": len(nodes),
             "edges_ingested": len(edges),
@@ -240,15 +246,18 @@ def sync_trace_to_neo4j(trace_data: Dict[str, Any]) -> Dict[str, Any]:
             "cloud_status": "synced_to_neo4j_aura"
         }
     except Exception as e:
-        logger.error(f"Neo4j sync error: {e}")
-        return {"success": False, "error": str(e)}
+        logger.error(f"Neo4j sync error: {e}. Falling back to KùzuDB.")
+        return sync_trace_to_kuzu(trace_data)
 
 
 def execute_cypher(query: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Execute raw Cypher query for custom forensic interrogation."""
+    """Execute raw Cypher query against the active graph engine."""
+    if GRAPH_ENGINE != "neo4j":
+        return kuzu_execute_cypher(query, params)
+
     driver = get_driver()
     if not driver:
-        return {"success": False, "error": "No Neo4j connection"}
+        return kuzu_execute_cypher(query, params)
 
     params = params or {}
     t0 = time.time()
@@ -261,7 +270,6 @@ def execute_cypher(query: str, params: Optional[Dict[str, Any]] = None) -> Dict[
                 row = {}
                 for k in keys:
                     val = record[k]
-                    # Format Neo4j types to JSON serializable
                     if hasattr(val, "id") and hasattr(val, "items"):
                         row[k] = dict(val.items())
                     elif hasattr(val, "nodes") and hasattr(val, "relationships"):
@@ -272,14 +280,16 @@ def execute_cypher(query: str, params: Optional[Dict[str, Any]] = None) -> Dict[
 
         return {
             "success": True,
+            "engine": "Neo4j Aura",
             "columns": list(keys),
             "count": len(records),
-            "data": records[:100],  # Limit to 100 rows for security
+            "data": records[:100],
             "execution_ms": round((time.time() - t0) * 1000, 1)
         }
     except Exception as e:
         return {
             "success": False,
+            "engine": "Neo4j Aura",
             "error": str(e),
             "execution_ms": round((time.time() - t0) * 1000, 1)
         }

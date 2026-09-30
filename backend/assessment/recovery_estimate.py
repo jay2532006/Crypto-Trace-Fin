@@ -15,6 +15,18 @@ from backend.models.domain_models import RecoveryAssessment
 from backend.models.confidence_types import DisplayTier
 
 
+# §4.2: Fraud-type recovery difficulty calibration
+FRAUD_TYPE_MODIFIERS: Dict[str, int] = {
+    "INVESTMENT_SCAM": 0,
+    "TASK_BASED_FRAUD": 5,      # Faster off-ramp observed
+    "RANSOMWARE": -10,          # Negotiation delays recovery
+    "SEXTORTION": -15,          # Victim reporting delay reduces window
+    "DARKNET": -30,             # Near-zero recovery baseline
+    "PHISHING": 0,
+    "ORGANIZED_CRIME": -10,     # Multi-layered syndicate dissipation
+}
+
+
 class RecoveryEstimator:
     MIN_VALUE_USD = 120.0  # Approx ₹10,000 INR threshold
     MIN_COMPLETENESS_PCT = 70.0
@@ -27,12 +39,26 @@ class RecoveryEstimator:
         attribution_confidence: str,  # LOW, MEDIUM, HIGH
         is_fiu_registered_vasp: bool,
         hop_count: int,
-        elapsed_hours: float = 12.0,
+        elapsed_hours: Optional[float] = None,
         mixer_detected: bool = False,
+        fraud_type: Optional[str] = None,
     ) -> RecoveryAssessment:
         """
         Calculates the Heuristic Recovery Estimate score (0-100) and operational action window.
+        §4.1: If elapsed_hours is None (no verified case date or hop timestamps),
+        returns display_tier='insufficient_data' rather than fabricating urgency.
         """
+        # ── Step 0: Check Temporal Verification (§4.1) ──
+        if elapsed_hours is None:
+            return RecoveryAssessment(
+                case_id=case_id,
+                recovery_score=0,
+                action_window_hours=0,
+                display_tier="insufficient_data",
+                calculation_basis="Temporal evidence missing: case creation date and hop timestamps unavailable to evaluate action window.",
+                disclaimer="Recovery estimate requires verified elapsed time to compute operational action window. Insufficient timing data.",
+            )
+
         # ── Step 1: Check PRD FR-016 Eligibility Boundary Conditions ──
         ineligibility_reasons = []
         if hop_count <= 0:
@@ -96,7 +122,13 @@ class RecoveryEstimator:
         # d) Attribution Band: HIGH = +10, MEDIUM = +5
         attr_score = 10 if attribution_confidence.upper() == "HIGH" else 5
 
-        total_score = min(95, cooperation_score + time_score + path_score + attr_score)
+        # e) §4.2 Fraud Type Modifier
+        fraud_mod = 0
+        if fraud_type:
+            cleaned_ft = fraud_type.strip().upper().replace(" ", "_").replace("-", "_")
+            fraud_mod = FRAUD_TYPE_MODIFIERS.get(cleaned_ft, 0)
+
+        total_score = max(5, min(95, cooperation_score + time_score + path_score + attr_score + fraud_mod))
 
         basis = (
             f"Eligible Case: Traced ${traced_amount_usd:,.2f} USD ({hop_count} hops). "
@@ -104,6 +136,8 @@ class RecoveryEstimator:
             f"Time Urgency Factor: {time_score}/30 ({elapsed_hours:.1f}h elapsed). "
             f"Path Simplicity: {path_score}/25."
         )
+        if fraud_type:
+            basis += f" Fraud Type Modifier: {fraud_type} ({fraud_mod:+d} pts)."
 
         return RecoveryAssessment(
             case_id=case_id,

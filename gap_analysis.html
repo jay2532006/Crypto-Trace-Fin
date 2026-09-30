@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CryptoTrace LEA — Logical Gap Analysis</title>
+<style>
+  :root {
+    --bg: #080b10; --bg-2: #0d1117; --bg-3: #111620;
+    --surface: #161b26; --surface-2: #1c2233;
+    --border: rgba(255,255,255,0.07);
+    --text: #e2e8f0; --text-2: #94a3b8; --text-3: #4b5a72;
+    --blue: #60a5fa; --blue-dim: rgba(96,165,250,0.1); --blue-b: rgba(96,165,250,0.22);
+    --teal: #2dd4bf; --teal-dim: rgba(45,212,191,0.09);
+    --amber: #fbbf24; --amber-dim: rgba(251,191,36,0.09);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.09);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.09);
+    --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.09);
+    --orange: #fb923c; --orange-dim: rgba(251,146,60,0.09);
+    --mono: 'Fira Code','Cascadia Code','Consolas',monospace;
+    font-size: 14px;
+  }
+  @media(prefers-color-scheme:light){
+    :root{
+      --bg:#f8fafc;--bg-2:#f1f5f9;--bg-3:#e2e8f0;
+      --surface:#fff;--surface-2:#f8fafc;
+      --border:rgba(0,0,0,0.07);
+      --text:#0f172a;--text-2:#475569;--text-3:#94a3b8;
+      --blue:#2563eb;--blue-dim:rgba(37,99,235,0.06);--blue-b:rgba(37,99,235,0.18);
+      --teal:#0d9488;--teal-dim:rgba(13,148,136,0.07);
+      --amber:#d97706;--amber-dim:rgba(217,119,6,0.07);
+      --red:#dc2626;--red-dim:rgba(220,38,38,0.06);
+      --green:#16a34a;--green-dim:rgba(22,163,74,0.06);
+      --purple:#7c3aed;--purple-dim:rgba(124,58,237,0.06);
+      --orange:#ea580c;--orange-dim:rgba(234,88,12,0.06);
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;line-height:1.65;}
+
+  /* Topbar */
+  .tb{background:var(--bg-2);border-bottom:1px solid var(--border);padding:12px 36px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+  .tb-logo{width:26px;height:26px;background:linear-gradient(135deg,var(--blue),var(--teal));border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0;}
+  .tb-t{font-size:12px;font-weight:700;color:var(--text);}
+  .tb-s{font-size:11px;color:var(--text-3);margin-left:4px;}
+  .tb-b{margin-left:auto;background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);color:var(--red);font-size:9px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;}
+
+  .wrap{max-width:980px;margin:0 auto;padding:36px 20px 80px;}
+
+  /* Hero */
+  .hero{text-align:center;padding:44px 0 32px;border-bottom:1px solid var(--border);margin-bottom:40px;}
+  .hero-eye{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--red);text-transform:uppercase;margin-bottom:12px;}
+  .hero h1{font-size:26px;font-weight:800;line-height:1.2;margin-bottom:10px;}
+  .hero p{font-size:13px;color:var(--text-2);max-width:580px;margin:0 auto;}
+
+  /* Summary row */
+  .sum-row{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:40px;}
+  .sum-cell{flex:1;padding:18px 20px;text-align:center;border-right:1px solid var(--border);}
+  .sum-cell:last-child{border-right:none;}
+  .sum-n{font-size:22px;font-weight:800;margin-bottom:3px;}
+  .sum-l{font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;}
+  .c-r{color:var(--red)}.c-a{color:var(--amber)}.c-g{color:var(--green)}.c-b{color:var(--blue)}.c-p{color:var(--purple)}
+
+  /* Section */
+  .sec{margin-bottom:48px;}
+  .sec-hdr{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:24px;}
+  .sec-num{background:var(--blue-dim);border:1px solid var(--blue-b);color:var(--blue);font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;flex-shrink:0;}
+  .sec-hdr h2{font-size:16px;font-weight:700;}
+
+  /* Gap card */
+  .gap{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;overflow:hidden;}
+  .gap-hdr{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
+  .gap-icon{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:1px;}
+  .gap-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .gap-sub{font-size:12px;color:var(--text-2);line-height:1.5;}
+  .gap-meta{margin-left:auto;text-align:right;flex-shrink:0;}
+  .gap-body{padding:14px 18px 16px;}
+
+  /* Badges */
+  .badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.07em;padding:2px 7px;border-radius:3px;text-transform:uppercase;}
+  .b-crit{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
+  .b-high{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,191,36,0.2);}
+  .b-med{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-b);}
+  .b-low{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
+  .b-new{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+  .eff{font-size:10px;color:var(--text-3);display:block;margin-top:4px;}
+
+  /* Split: problem / fix */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0;}
+  .split-box{background:var(--bg-2);border:1px solid var(--border);border-radius:7px;padding:12px 14px;}
+  .split-label{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .s-prob .split-label{color:var(--red);}
+  .s-fix .split-label{color:var(--green);}
+
+  ul.gap-list{padding-left:16px;margin:0;}
+  ul.gap-list li{font-size:12px;color:var(--text-2);margin-bottom:5px;line-height:1.5;}
+  ul.gap-list li strong{color:var(--text);}
+
+  /* Code */
+  .code{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:11px;color:#a5f3fc;overflow-x:auto;margin:10px 0;line-height:1.6;white-space:pre;}
+  .cm{color:var(--text-3);}
+  .ck{color:#93c5fd;}
+  .cv{color:#a7f3d0;}
+  .cs{color:#fca5a5;}
+  .cf{color:#c4b5fd;}
+
+  /* Infobox */
+  .ib{border-radius:6px;padding:11px 14px;font-size:12px;margin:10px 0;display:flex;gap:9px;align-items:flex-start;}
+  .ib-b{background:var(--blue-dim);border:1px solid var(--blue-b);color:var(--text-2);}
+  .ib-a{background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2);color:var(--text-2);}
+  .ib-g{background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);color:var(--text-2);}
+  .ib-r{background:var(--red-dim);border:1px solid rgba(248,113,113,0.2);color:var(--text-2);}
+  .ib-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
+
+  /* Table */
+  table.t{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}
+  table.t th{text-align:left;padding:7px 10px;background:var(--bg-3);color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);}
+  table.t td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:top;}
+  table.t tr:last-child td{border-bottom:none;}
+  table.t td:first-child{font-family:var(--mono);color:var(--teal);font-size:11px;}
+
+  h3{font-size:13px;font-weight:700;color:var(--text);margin:14px 0 8px;}
+  p{font-size:12.5px;color:var(--text-2);margin-bottom:8px;line-height:1.65;}
+  strong{color:var(--text);}
+  code{font-family:var(--mono);font-size:11px;background:var(--bg-3);padding:1px 5px;border-radius:3px;color:var(--teal);}
+
+  /* Master table */
+  .mt{width:100%;border-collapse:collapse;font-size:12px;}
+  .mt th{padding:9px 12px;background:var(--surface);color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border);text-align:left;}
+  .mt td{padding:9px 12px;border-bottom:1px solid var(--border);color:var(--text-2);vertical-align:top;}
+  .mt tr:last-child td{border-bottom:none;}
+  .mt td:first-child{color:var(--text);font-weight:600;font-size:12px;}
+
+  @media(max-width:600px){
+    .split{grid-template-columns:1fr;}
+    .sum-row{flex-direction:column;}
+    .sum-cell{border-right:none;border-bottom:1px solid var(--border);}
+    .sum-cell:last-child{border-bottom:none;}
+    .tb{padding:10px 14px;}
+    .wrap{padding:24px 12px 60px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="tb">
+  <div class="tb-logo">CT</div>
+  <span class="tb-t">CryptoTrace LEA</span>
+  <span class="tb-s">SIH 26183 · Logical Gap Analysis</span>
+  <span class="tb-b">Gap Analysis v1</span>
+</div>
+
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">Logic vs Problem Statement — Full Gap Map</div>
+  <h1>Where the Algorithms Break,<br>Where They're Incomplete, What's Missing</h1>
+  <p>Every logical gap found by cross-referencing the core logic document, the architecture spec, and every requirement in SIH 26183 — with precise fixes for each.</p>
+</div>
+
+<!-- SUMMARY -->
+<div class="sum-row">
+  <div class="sum-cell"><div class="sum-n c-r">8</div><div class="sum-l">Critical Gaps</div></div>
+  <div class="sum-cell"><div class="sum-n c-a">9</div><div class="sum-l">Logic Flaws</div></div>
+  <div class="sum-cell"><div class="sum-n c-b">7</div><div class="sum-l">Missing Features</div></div>
+  <div class="sum-cell"><div class="sum-n c-p">6</div><div class="sum-l">Improvements</div></div>
+  <div class="sum-cell"><div class="sum-n c-g">30</div><div class="sum-l">Total Findings</div></div>
+</div>
+
+<!-- =================== SECTION 1 =================== -->
+<div class="sec" id="s1">
+  <div class="sec-hdr">
+    <span class="sec-num">01</span>
+    <h2>Tracing Engine — Logical Gaps & Flaws</h2>
+  </div>
+
+  <!-- GAP 1.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">🌊</div>
+      <div>
+        <div class="gap-title">Forward-Only BFS — Cannot Trace Incoming Funds (Fan-In Attacks)</div>
+        <div class="gap-sub">The engine starts from the suspect wallet and only follows <strong>outgoing</strong> transfers. It completely ignores who funded the suspect wallet — the layering chain above it. Indian investment scams typically show multi-source aggregation into a single collector wallet before forwarding to an exchange. Your system misses the entire upstream network.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">PS requires "fund movement patterns"</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Current Logic</div>
+          <ul class="gap-list">
+            <li><code>outflows = [t for t in live_transfers if t.direction == "OUT"]</code></li>
+            <li>The BFS queue only ever enqueues <code>to_addr</code> — never <code>from_addr</code></li>
+            <li>Victim reports wallet W1. W1 receives from 50 victims, forwards to exchange. System only shows W1 → exchange, never shows the 50 victims → W1 flow</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Add a <code>TraceDirection</code> enum: <code>FORWARD | BACKWARD | BIDIRECTIONAL</code></li>
+            <li>Backward pass: enqueue all <code>from_addr</code> of incoming transfers up to 2 hops behind the suspect address</li>
+            <li>Label backward nodes as <code>"victim_aggregator"</code> or <code>"funding_source"</code> — do not attribute VASP to them, just count and show the funding scale</li>
+            <li>Limit backward depth to 2 to prevent graph explosion</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ib ib-a"><span class="ib-icon">⚠️</span><div>The problem statement explicitly says "detect fund movement patterns" and "detection of intermediary laundering wallets." Upstream aggregation IS a laundering pattern. Missing it means the mule network detection only catches the forwarding leg, not the aggregation leg — which is where the fraud victims appear.</div></div>
+    </div>
+  </div>
+
+  <!-- GAP 1.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">🔁</div>
+      <div>
+        <div class="gap-title">Cycle Detection Only Prevents Re-visit — Loses Convergence Evidence</div>
+        <div class="gap-sub">When two BFS branches reach the same address, the second incoming edge is appended to <code>edges</code> and <code>hops</code>, but the address is not re-enqueued. This is logically correct for traversal but the convergence event — which is a strong typology signal for money laundering consolidation — is never flagged.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Missing typology signal</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Current Logic</div>
+          <ul class="gap-list">
+            <li>When address A is already in <code>visited_nodes</code>, the node record is skipped with <code>continue</code></li>
+            <li>The edge IS recorded but no flag is set</li>
+            <li>Two separate peel chains converging into one wallet before depositing to an exchange — a classic consolidation move — is invisible to the typology engine</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Track <code>convergence_nodes: Dict[str, int]</code> — count of times each address appears as a <code>to_addr</code></li>
+            <li>Any address with convergence count ≥ 2 should be flagged as a <code>CONSOLIDATION_HOP</code> node type</li>
+            <li>Add a new <code>CONSOLIDATION_FUNNEL</code> typology rule that fires when 2+ independent chains merge before a VASP deposit</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 1.3 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">📅</div>
+      <div>
+        <div class="gap-title">90-Day Time Window Is a Hard Cutoff With No Warning</div>
+        <div class="gap-sub"><code>time_window_days = 90</code> silently excludes transactions older than 90 days. Many darknet and ransomware investigations involve wallet activity going back 12–18 months. When the cutoff truncates the trace, <code>data_completeness_pct</code> is not penalized for this — it only penalizes provider errors.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Silent data loss</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Current Logic</div>
+          <ul class="gap-list">
+            <li><code>data_completeness_pct = 100.0 if DEMO else max(30.0, 92.5 - (provider_errors * 15.0))</code></li>
+            <li>Time window truncation is completely invisible to the completeness metric</li>
+            <li>A 180-day old wallet could return 0 transactions and the system reports 92.5% completeness</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Track <code>time_window_truncations: int</code> — incremented when the oldest available transaction is older than <code>time_window_days</code></li>
+            <li>Deduct 10% from completeness per truncation event</li>
+            <li>Add a <code>TIME_WINDOW_WARNING</code> to <code>boundary_events</code> when truncation happens</li>
+            <li>Expose <code>earliest_transaction_date</code> in the trace result so the investigator knows the actual data horizon</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 1.4 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">🔗</div>
+      <div>
+        <div class="gap-title">Bridge Destination Is Hardcoded — Not Actually Resolved from Chain</div>
+        <div class="gap-sub">When a bridge contract is hit, <code>decoded_recipient</code> is hardcoded as a fixed address based on whether dest_chain is TRON or ETH. This means every single ETH→TRON bridge hop shows the exact same recipient address regardless of the actual transaction. The "PROVEN" link_type is assigned even though the destination was never actually queried.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">Fabricates forensic evidence</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="code"><span class="cm"># Current code — THIS IS THE PROBLEM:</span>
+<span class="ck">dest_chain</span> = <span class="cs">"TRON"</span> <span class="ck">if</span> chain == <span class="cs">"ETH"</span> <span class="ck">else</span> <span class="cs">"ETH"</span>
+<span class="ck">decoded_recipient</span> = <span class="cs">"TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6"</span> <span class="ck">if</span> dest_chain == <span class="cs">"TRON"</span> <span class="ck">else</span> <span class="cs">"0x28c6c06298d514db089934071355e5743bf21d60"</span>
+<span class="cm"># Every ETH→TRON bridge hop will ALWAYS show the same WazirX/Binance address
+# regardless of actual on-chain events. This is not PROVEN — it is fabricated.</span></div>
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Why This Is Dangerous</div>
+          <ul class="gap-list">
+            <li>A court report generated from this trace will claim a PROVEN cross-chain link to a specific address that was never actually verified</li>
+            <li>The <code>link_type="PROVEN"</code> assertion is false — it's deterministic fixture data, not an on-chain verified event</li>
+            <li>This creates a Section 65B IEA evidence integrity problem</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>For LIVE mode: query the destination chain's block explorer for the bridge delivery transaction using the source tx_hash as a correlation key</li>
+            <li>If destination tx cannot be found within 1 hour: classify as <code>HEURISTIC_CORRELATION</code>, never <code>PROVEN</code></li>
+            <li>Only assign <code>PROVEN</code> when <code>dest_tx_hash</code> is actually retrieved from a live provider</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 1.5 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">⏱️</div>
+      <div>
+        <div class="gap-title">Timeout Kills Entire Trace — No Partial Result Saved</div>
+        <div class="gap-sub">When <code>timeout_seconds = 60</code> is hit, the loop breaks with <code>termination_reason = "TIMEOUT"</code>. The post-traversal pipeline (typology, VASP scoring, risk) still runs on whatever was collected. But if the timeout happens at hop 1 because the provider was slow, the investigator gets a bare skeleton with no meaningful output.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Demo reliability risk</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Before the BFS loop, set a <code>partial_checkpoint_at_hop = 2</code>. When <code>len(hops) >= 2</code> and timeout occurs, the result is marked <code>PARTIAL_COMPLETE</code> rather than <code>TIMEOUT</code>, and the post-traversal pipeline still runs fully. The investigator gets a 2-hop partial result with a warning banner instead of an empty result.</li>
+        <li><strong>Fix:</strong> Increase <code>timeout_seconds</code> to <code>120</code> for non-demo cases. The 60s limit is too aggressive for multi-chain traces where each provider call takes 2–4s.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SECTION 2 =================== -->
+<div class="sec" id="s2">
+  <div class="sec-hdr">
+    <span class="sec-num">02</span>
+    <h2>VASP Attribution — Logic Gaps</h2>
+  </div>
+
+  <!-- GAP 2.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">🎯</div>
+      <div>
+        <div class="gap-title">Attribution Resolver Only Checks Terminal Nodes — Misses Intermediate VASP Deposits</div>
+        <div class="gap-sub">The <code>AttributionResolver.resolve()</code> function identifies terminal addresses — those that appear as <code>to_addr</code> but never as <code>from_addr</code>. But in real Indian fraud, funds often hit a known exchange deposit address at hop 2 or 3 and then move again internally within the exchange. Your resolver misses the earlier VASP deposit because it only looks at the last address.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">Nearest VASP detection broken</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Current Logic</div>
+          <ul class="gap-list">
+            <li><code>terminal_addrs = [addr for addr in to_addrs if addr not in from_addrs]</code></li>
+            <li>Path: Victim → Mule1 → Mule2 → <strong>WazirX deposit</strong> → WazirX internal wallet → WazirX cold storage</li>
+            <li>WazirX deposit address IS a <code>from_addr</code> (it sends internally), so it's excluded from terminal_addrs</li>
+            <li>The resolver sees WazirX cold storage as the terminal, which is NOT in the hot wallet patterns → returns UNRESOLVED</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Change resolver to check ALL addresses in the trace (not just terminal ones) against VASP patterns</li>
+            <li>Return the <strong>first</strong> (nearest) VASP match in BFS order, not the last</li>
+            <li>Mark subsequent hops from a matched VASP as <code>type: "vasp_internal"</code> — do not trace them further</li>
+            <li>This is exactly what the problem statement means by "identifying the nearest exchange receiving direct deposits"</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ib ib-r"><span class="ib-icon">🚨</span><div>The problem statement says: <strong>"identifying the nearest exchange or VASP receiving direct deposits."</strong> The current resolver finds the furthest address, not the nearest VASP. This is the core attribution requirement and it's logically inverted.</div></div>
+    </div>
+  </div>
+
+  <!-- GAP 2.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">📐</div>
+      <div>
+        <div class="gap-title">VASP Scorer Called with Hardcoded "WAZIRX" in DEMO Mode — Bypasses Attribution</div>
+        <div class="gap-sub">In DEMO mode, <code>adaptive_vasp_scorer.score_candidate(vasp_key="WAZIRX", ...)</code> is called with a hardcoded key regardless of what the trace actually resolved. This means every demo trace attributes funds to WazirX even if the demo case is configured to terminate at a Tornado Cash mixer or a Bybit address.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">Demo shows wrong VASP</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="code"><span class="cm"># In trace_engine.py DEMO branch — hardcoded WAZIRX regardless of demo case</span>
+<span class="ck">if</span> mode.upper() == <span class="cs">"DEMO"</span>:
+    attribution = adaptive_vasp_scorer.score_candidate(
+        <span class="cf">vasp_key</span>=<span class="cs">"WAZIRX"</span>,  <span class="cm"># ← ALWAYS WazirX in demo, even for mixer/OFAC cases</span>
+        <span class="cf">trace_result</span>=raw_result,
+        ...
+    )</div>
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Problem</div>
+          <ul class="gap-list">
+            <li>Demo case CR-2026-MIXER-BOUND-02 (Tornado Cash) would still attribute to WazirX</li>
+            <li>Demo case CR-2026-OFAC-SDN-05 (Lazarus Group / Binance) would also attribute to WazirX</li>
+            <li>Each demo case's VASP is predetermined but the scorer ignores it</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Read <code>vasp_key</code> from the demo case fixture: <code>demo_cases_v2.py</code> already has the expected VASP per case</li>
+            <li>Replace hardcoded "WAZIRX" with <code>fixture_case.expected_vasp</code></li>
+            <li>Or better: always use the live <code>attribution_resolver.resolve()</code> path even in DEMO mode — the fixture data already terminates at the right address</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 2.3 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">🔢</div>
+      <div>
+        <div class="gap-title">Hop Penalty Decay Is Uncapped — Can Drive Score Negative Before Clamping</div>
+        <div class="gap-sub">Step 3b formula: <code>-max(0.0, (hop_count - 1) × 0.08)</code>. At 5 hops this is -0.32 (-32 points). At the default <code>max_hops=5</code>, the raw score before clamping for a non-exact, non-FIU, non-recent wallet would be: 50 + 0 + 0 - 32 + 15 + 0 + 0 = 33. After clamping: 33. Label: UNRESOLVED (below 60). Every deep trace with a heuristic cluster match returns UNRESOLVED regardless of the cluster confidence.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Over-penalizes deep traces</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Problem:</strong> A 4-hop trace to a Binance hot wallet with cluster-heuristic match gets score 33 → UNRESOLVED. But that cluster match is actually strong evidence — it should be INFERRED at minimum.</li>
+        <li><strong>Fix A:</strong> Cap hop penalty at <code>-0.20</code> (max 20 points, not unlimited). Formula: <code>-min(0.20, (hop_count - 1) × 0.08)</code></li>
+        <li><strong>Fix B:</strong> Increase the INFERRED threshold from 60 to account for deep-trace scenarios: add a <code>DEEP_TRACE_PARTIAL</code> confidence band for score 40–59 with explicit uncertainty language</li>
+        <li><strong>Why it matters:</strong> The problem statement requires "real-time tracing capability" — deep traces should still produce actionable output, not UNRESOLVED non-answers</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 2.4 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--blue-dim);">🏷️</div>
+      <div>
+        <div class="gap-title">Single VASP Candidate — No Multi-VASP Ranking Output</div>
+        <div class="gap-sub">The scorer evaluates one <code>vasp_key</code> at a time. When the resolver finds an ambiguous match (e.g. address in both WazirX and Binance clusters), it returns <code>candidates[0]</code> and caps at MEDIUM. But an investigator would benefit from seeing ALL matching VASPs ranked by score — especially for freeze notices where you may need to contact multiple exchanges.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-med">Medium</span><span class="eff">Limits investigative output</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> When <code>is_ambiguous=True</code>, run <code>score_candidate()</code> for each candidate VASP in the ambiguous set and return a ranked list of <code>AttributionScore</code> objects</li>
+        <li><strong>Frontend:</strong> Show a "VASP Candidates" accordion that lists each candidate with its individual score and a "Contact All" button for freeze notices</li>
+        <li><strong>Problem statement alignment:</strong> "enhance coordination with VASPs" — you can't coordinate with all of them if you only surface one</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SECTION 3 =================== -->
+<div class="sec" id="s3">
+  <div class="sec-hdr">
+    <span class="sec-num">03</span>
+    <h2>Typology Engine — Logic Gaps</h2>
+  </div>
+
+  <!-- GAP 3.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">🐛</div>
+      <div>
+        <div class="gap-title">MULE_NETWORK Rule: Timestamp Fallback Creates False Positives</div>
+        <div class="gap-sub">When <code>timestamp_epoch</code> is missing or zero on a hop, the code injects a nominal <code>600</code> seconds (10 minutes) fallback. This means if 3+ hops are missing timestamps — which happens frequently in DEMO mode where fixture data may omit timestamps — the rule will fire on synthetic time differences and produce a false MULE_NETWORK finding.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">False positive in demo</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="code"><span class="cm"># Current code in mule_network.py — PROBLEM:</span>
+<span class="ck">if</span> ts1 <span class="ck">and</span> ts2 <span class="ck">and</span> ts2 >= ts1:
+    time_diffs.append(<span class="cv">int</span>(ts2 - ts1))
+<span class="ck">else</span>:
+    time_diffs.append(<span class="cv">600</span>)  <span class="cm"># ← Injected 10-minute fake timestamp</span>
+<span class="cm"># If all 3 required hops have missing timestamps:
+# time_diffs = [600, 600] — all within 3600s threshold
+# Rule fires! But there is NO actual timing evidence.</span></div>
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Impact</div>
+          <ul class="gap-list">
+            <li>A MULE_NETWORK finding with fabricated timing evidence is a false positive that could affect investigative decisions</li>
+            <li>The court report would cite timing evidence that doesn't exist</li>
+            <li>In a live investigation, presenting this to a judge under Section 65B IEA would be challenged</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Remove the 600s fallback entirely</li>
+            <li>Track <code>hops_with_timing</code> vs <code>hops_without_timing</code></li>
+            <li>Only include timing-confirmed hops in the mule wallet list</li>
+            <li>If <code>hops_with_timing < 2</code>, set <code>confidence = "LOW"</code> and add uncertainty note: "Timing evidence incomplete — temporal pattern could not be verified"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 3.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">⚡</div>
+      <div>
+        <div class="gap-title">RAPID_HOP Rule: 3-Hour Window Is Chain-Agnostic — Wrong for Bitcoin</div>
+        <div class="gap-sub">The RAPID_HOP rule fires when ≥3 hops occur within 10,800 seconds (3 hours). This is appropriate for EVM chains where blocks are ~12 seconds. But Bitcoin has ~10-minute block times. Three Bitcoin hops in 3 hours = 3 consecutive blocks, which is completely normal Bitcoin behavior, not rapid hop laundering.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Chain-specific false positives</span></div>
+    </div>
+    <div class="gap-body">
+      <table class="t">
+        <tr><th>Chain</th><th>Block Time</th><th>3 hops in 3h = ?</th><th>Suspicious?</th><th>Correct Threshold</th></tr>
+        <tr><td>ETH</td><td>~12s</td><td>Could be &lt;1 minute</td><td>Yes — suspicious</td><td>10,800s (3h) ✓</td></tr>
+        <tr><td>TRON</td><td>~3s</td><td>Could be &lt;30 seconds</td><td>Very suspicious</td><td>3,600s (1h) — should be tighter</td></tr>
+        <tr><td>BTC</td><td>~600s</td><td>3 sequential blocks = normal</td><td>No — completely normal</td><td>86,400s (24h) for BTC</td></tr>
+        <tr><td>POLYGON</td><td>~2s</td><td>Near-instant</td><td>Very suspicious</td><td>1,800s (30m) — tightest</td></tr>
+      </table>
+      <div class="ib ib-b"><span class="ib-icon">💡</span><div><strong>Fix:</strong> Add a <code>RAPID_HOP_THRESHOLDS: Dict[str, int]</code> config per chain. ETH: 10800, TRON: 3600, BTC: 86400, POLYGON: 1800. Pass <code>chain</code> into the <code>evaluate()</code> call and use the chain-specific threshold.</div></div>
+    </div>
+  </div>
+
+  <!-- GAP 3.3 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">📋</div>
+      <div>
+        <div class="gap-title">PEEL_CHAIN Rule Is Referenced But Never Shown Implemented</div>
+        <div class="gap-sub">The <code>TypologyEngine</code> includes <code>peel_chain_rule</code> in its rules list and the risk assessor adds +15 for "PEEL_CHAIN". But the logic-core document only references <code>rules/other_rules.py</code> and shows only <code>RapidHopRule</code>. The peel chain detection logic is either missing or hidden in an undocumented location. Yet the risk assessor scores it — meaning if it somehow fires, 15 points are added without verifiable logic.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">Unverifiable risk component</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>What peel chain is:</strong> A pattern where each hop transfers a slightly smaller amount to a new address, "peeling" off a layer fee, while the remainder goes to the next wallet. Classic BTC money laundering pattern.</li>
+        <li><strong>What to verify:</strong> Check if <code>peel_chain_rule</code> is actually defined in <code>other_rules.py</code> or elsewhere. If it's a placeholder class that always returns <code>None</code>, remove it from the risk scoring components to avoid phantom +15 risk points</li>
+        <li><strong>Implement properly:</strong> Peel chain = successive value reduction of 1–5% per hop, minimum 3 hops, each to a unique address. Formula: <code>(hop[i].amount - hop[i+1].amount) / hop[i].amount</code> is between 0.005 and 0.05 for all consecutive pairs</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 3.4 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--blue-dim);">🔀</div>
+      <div>
+        <div class="gap-title">Typology Rules Are Independent — No Cross-Rule Compounding</div>
+        <div class="gap-sub">The typology engine runs all 5 rules in isolation with no inter-rule signaling. In real fraud cases, RAPID_HOP + MULE_NETWORK occurring simultaneously is a much stronger signal than either alone. The current engine returns both findings but the risk scorer simply adds their scores without multiplicative amplification.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-med">Medium</span><span class="eff">Risk under-estimation</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Add a <code>compound_risk_bonus</code> to the risk assessor: when both MULE_NETWORK and RAPID_HOP are present simultaneously, add +15 bonus points on top of their individual contributions</li>
+        <li>When MULE_NETWORK + MIXER_BOUNDARY co-occur: add +10 bonus and force <code>CRITICAL</code> regardless of numeric score</li>
+        <li>When OFAC + ANY typology: immediately return CRITICAL with a mandatory freeze alert, no further scoring needed</li>
+        <li>This creates a compound risk matrix that better reflects real investigative judgment</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SECTION 4 =================== -->
+<div class="sec" id="s4">
+  <div class="sec-hdr">
+    <span class="sec-num">04</span>
+    <h2>Risk Scoring — Logic Gaps</h2>
+  </div>
+
+  <!-- GAP 4.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">💰</div>
+      <div>
+        <div class="gap-title">Risk Score Has No Amount Factor — ₹1,000 Fraud Scores Same as ₹1 Crore Fraud</div>
+        <div class="gap-sub">The risk scoring components are: OFAC (45), mixer (30), mule (20), peel (15), hop velocity (5–10). None of them incorporate the fraud amount. A ₹1,000 task-based fraud and a ₹1 crore investment scam would produce identical risk scores given the same typologies. This directly violates investigative triage logic — high-value cases should be prioritized for immediate action.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">Triage logic missing</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">Current Logic</div>
+          <ul class="gap-list">
+            <li>Components: OFAC=45, mixer=30, mule=20, peel=15, velocity=5/10</li>
+            <li>Amount is not a component</li>
+            <li>A ₹50 dusting attack that hits a mixer scores 30 (MEDIUM)</li>
+            <li>A ₹50 lakh ransomware that has clean hops scores only 5–10 (LOW)</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix — Add Amount Component</div>
+          <ul class="gap-list">
+            <li><code>> ₹10 lakh ($12K+): +15 points</code></li>
+            <li><code>> ₹1 crore ($120K+): +25 points</code></li>
+            <li><code>> ₹10 crore ($1.2M+): +35 points</code></li>
+            <li>This ensures high-value cases always rank higher in the investigator alert queue</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 4.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">🔗</div>
+      <div>
+        <div class="gap-title">Risk Score Ignores Cross-Chain Events — Bridge Layering Not Penalized</div>
+        <div class="gap-sub">The problem statement explicitly lists "multi-chain transfers" as a key challenge. Cross-chain bridge usage is one of the strongest laundering indicators — it deliberately obscures the fund trail. Yet the risk assessor has no component for cross-chain movement. A case with 3 bridge hops across ETH→TRON→BSC scores identically to a clean single-chain trace.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">PS explicitly mentions multi-chain</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Add <code>cross_chain_layering: int</code> to risk components</li>
+        <li>1 bridge hop: +10 points</li>
+        <li>2+ bridge hops: +20 points</li>
+        <li>Bridge hop + mixer in same trace: +30 points (compound)</li>
+        <li>Add to the risk assessor: <code>"cross_chain_layering": 20 if len(trace_result.get("cross_chain_links", [])) >= 2 else (10 if cross_chain_links else 0)</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 4.3 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">🌍</div>
+      <div>
+        <div class="gap-title">VASP Jurisdiction Not Used in Risk Score — Offshore VASPs Same Risk as Indian</div>
+        <div class="gap-sub">Bybit (Dubai), MEXC (Seychelles), HTX (offshore) are present in the registry as UNREGISTERED. Funds reaching them are dramatically harder to freeze than funds reaching WazirX (FIU-IND registered). The risk score doesn't differentiate — a TRON transfer to a Bybit wallet scores the same risk as a transfer to WazirX.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Jurisdiction matters for freezing</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Add <code>offshore_vasp_penalty</code> to risk components: +15 if attributed VASP is <code>fiu_status = "UNREGISTERED"</code> and country is not India</li>
+        <li>This directly aligns with the problem statement's goal of "freezing of proceeds of crime" — offshore unregistered VASPs make freezing far harder</li>
+        <li>Surface this explicitly in the UI: "Offshore VASP detected — coordination delay expected (MLAT process)"</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SECTION 5 =================== -->
+<div class="sec" id="s5">
+  <div class="sec-hdr">
+    <span class="sec-num">05</span>
+    <h2>Recovery Estimate — Logic Gaps</h2>
+  </div>
+
+  <!-- GAP 5.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">🕐</div>
+      <div>
+        <div class="gap-title">elapsed_hours Defaults to 2.5 When Case Has No Created_Date</div>
+        <div class="gap-sub">If the database lookup for <code>created_date</code> fails or the case doesn't exist yet, <code>elapsed_hours</code> defaults to <code>2.5</code>. This artificially places every new case in the "≤24h" high-urgency bracket with +30 time score and a 33.5-hour action window — regardless of how old the fraud actually is. A victim who waited 3 days before filing gets shown a 33-hour action window that doesn't exist.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">False urgency misleads investigators</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Change the fallback to use <code>elapsed_hours = None</code> and handle explicitly: when elapsed is unknown, use the hop <code>timestamp_epoch</code> from the earliest hop as a proxy, then compute elapsed from that</li>
+        <li>If truly no timing information is available, return <code>display_tier = "insufficient_data"</code> with message: "Complaint timestamp not available — elapsed time cannot be estimated"</li>
+        <li>Never show a false urgency window — this could cause an investigator to deprioritize a genuinely urgent case that was filed with a DB error</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 5.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--blue-dim);">📊</div>
+      <div>
+        <div class="gap-title">Recovery Score Has No Fraud Type Weighting</div>
+        <div class="gap-sub">The problem statement lists 7 fraud types: investment scams, task fraud, sextortion, ransomware, phishing, darknet, organised crime. Each has different recovery urgency and VASP cooperation likelihood. Ransomware VASPs typically comply faster under pressure. Darknet transactions have near-zero recovery potential. The recovery estimator treats all fraud types identically.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-med">Medium</span><span class="eff">PS names all 7 fraud types</span></div>
+    </div>
+    <div class="gap-body">
+      <table class="t">
+        <tr><th>Fraud Type</th><th>Typical Recovery Window</th><th>VASP Cooperation</th><th>Suggested Modifier</th></tr>
+        <tr><td>Investment Scam</td><td>24–48h if caught early</td><td>High (India VASPs)</td><td>+0 (baseline)</td></tr>
+        <tr><td>Task-Based Fraud</td><td>12–24h</td><td>High</td><td>+5 (faster off-ramp)</td></tr>
+        <tr><td>Ransomware</td><td>72h+ (negotiation)</td><td>Medium</td><td>-10 (delayed)</td></tr>
+        <tr><td>Sextortion</td><td>Very short (victim shame delays reporting)</td><td>Medium</td><td>-15 (underreported)</td></tr>
+        <tr><td>Darknet</td><td>Near zero</td><td>Very Low</td><td>-30 (near ineligible)</td></tr>
+        <tr><td>Phishing</td><td>24–48h</td><td>High</td><td>+0 (baseline)</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SECTION 6 =================== -->
+<div class="sec" id="s6">
+  <div class="sec-hdr">
+    <span class="sec-num">06</span>
+    <h2>Missing Features Required by the Problem Statement</h2>
+  </div>
+
+  <!-- GAP 6.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">📡</div>
+      <div>
+        <div class="gap-title">DeFi Protocol Detection Is Completely Missing</div>
+        <div class="gap-sub">The problem statement explicitly names "DeFi protocols" as a challenge. DeFi encompasses DEX swaps (Uniswap, SushiSwap), liquidity pools, yield farms, and flash loans. Fraudsters swap USDT to ETH via Uniswap to obscure the asset trail. None of this is detected — the system treats Uniswap router calls as standard intermediary hops.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">PS explicitly names DeFi</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">What's Missing</div>
+          <ul class="gap-list">
+            <li>No DEX router registry (Uniswap V2/V3, SushiSwap, PancakeSwap, DODO)</li>
+            <li>No asset swap detection — USDT in, ETH out through same address isn't traced across the asset change</li>
+            <li>No liquidity pool interaction detection</li>
+            <li>No flash loan detection (common in DeFi exploit laundering)</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Minimum Fix for Demo</div>
+          <ul class="gap-list">
+            <li>Add a <code>DEX_REGISTRY</code> dict with top 5 DEX router addresses (Uniswap V3: <code>0xE592427A0AEce92De3Edee1F18E0157C05861564</code>)</li>
+            <li>When a hop hits a DEX router, flag as <code>type: "defi_swap"</code> and add a <code>DEFI_OBFUSCATION</code> finding</li>
+            <li>Don't halt BFS — continue following the swap recipient, but mark the asset may have changed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP 6.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--red-dim);">🇮🇳</div>
+      <div>
+        <div class="gap-title">No FIU-IND Compliance Check on Destination VASP</div>
+        <div class="gap-sub">The VASP registry distinguishes FIU-IND registered vs unregistered entities. But there is no automated compliance verification step — the system doesn't check whether the destination VASP has filed Suspicious Transaction Reports (STR) for the flagged wallet. FIU-IND has a DEXTER portal for exactly this cross-check. Missing this is a significant gap for Indian LEA users.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">Core India-specific requirement</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>What FIU-IND integration means:</strong> When a wallet is attributed to an Indian FIU-registered VASP (WazirX, CoinDCX, etc.), the system should automatically draft a STR-cross-reference note and include the VASP's nodal officer email in the freeze notice</li>
+        <li><strong>What exists:</strong> <code>nodal_officer_email</code> is in the VASP registry ✓ — but it's never surfaced in the freeze notice draft automatically</li>
+        <li><strong>Fix:</strong> When attribution is VERIFIED or INFERRED and the VASP is FIU-IND registered, the notice generator should auto-populate the nodal officer email, the VASP's freeze order format (each exchange has a specific format), and a reference to PMLA 2002 Section 12A</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 6.3 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">🧩</div>
+      <div>
+        <div class="gap-title">No Wallet Clustering Across Multiple Cases — Isolated Per-Case Analysis</div>
+        <div class="gap-sub">The problem statement says "clustering of exchange wallets" and "organized cyber-enabled financial crimes." Organized crime means the same mule wallets appear across multiple victim complaints. The current system analyzes each case in isolation — it has no cross-case wallet graph. If wallet A appears in 10 different NCRP complaints, the investigator sees 10 separate cases with no connection drawn between them.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-crit">Critical</span><span class="eff">PS requires clustering</span></div>
+    </div>
+    <div class="gap-body">
+      <div class="split">
+        <div class="split-box s-prob">
+          <div class="split-label">What's Missing</div>
+          <ul class="gap-list">
+            <li>No <code>wallet_appearances</code> cross-case index in SQLite</li>
+            <li>No alert when a wallet appears in 2+ cases</li>
+            <li>KùzuDB graph exists but is only used per-case — no cross-case query</li>
+          </ul>
+        </div>
+        <div class="split-box s-fix">
+          <div class="split-label">Fix</div>
+          <ul class="gap-list">
+            <li>Add a <code>wallet_index</code> table to <code>sahyog.db</code>: <code>(address, case_id, hop_depth, first_seen)</code></li>
+            <li>After every trace, insert all traversed addresses into this table</li>
+            <li>On new complaint intake: query <code>wallet_index</code> for the suspect address — if it appears in prior cases, immediately flag as <code>REPEAT_OFFENDER_WALLET</code> and cross-link the cases</li>
+            <li>Add a "Linked Cases" panel in the investigation view</li>
+          </ul>
+        </div>
+      </div>
+      <div class="ib ib-r"><span class="ib-icon">🚨</span><div>This is arguably the single most impactful missing feature for organized crime investigations. A mule network coordinator reuses the same wallets across hundreds of victims. Cross-case clustering would surface this pattern immediately.</div></div>
+    </div>
+  </div>
+
+  <!-- GAP 6.4 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--amber-dim);">⚡</div>
+      <div>
+        <div class="gap-title">No Automated Alert Generation on High-Risk Findings</div>
+        <div class="gap-sub">The problem statement requires "automated alert generation." The system generates findings and risk scores but there is no autonomous alert dispatch. If a CRITICAL risk case is traced at 3 AM, no alert is sent anywhere — the investigator has to log in and check manually. The "alerts" page in the frontend is a display component, not a push notification system.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">PS explicitly requires automated alerts</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Minimum fix for demo:</strong> After every trace that produces CRITICAL risk, write an alert record to SQLite <code>alerts</code> table with timestamp, case_id, risk_category, and trigger reason</li>
+        <li><strong>Push notification:</strong> Add an email dispatch for CRITICAL risk using Python's <code>smtplib</code> with Gmail SMTP — free, no external service needed</li>
+        <li><strong>WebSocket broadcast:</strong> When an alert is created, broadcast a WebSocket event to all connected investigator sessions so the alert tray updates live</li>
+        <li><strong>Webhook for NCRP:</strong> POST a JSON alert to a configurable <code>ALERT_WEBHOOK_URL</code> — this is the stub integration point for SAHYOG/NCRP that doesn't require real government credentials</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 6.5 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--blue-dim);">📈</div>
+      <div>
+        <div class="gap-title">No Analytics Dashboard for LEA — Aggregate Statistics Missing</div>
+        <div class="gap-sub">The problem statement requires "analytics dashboards for law enforcement agencies." The current dashboard shows per-case investigation details. There is no aggregate view showing: total cases this week, total frozen value, fraud type distribution, most common destination VASPs, mule network hotspots, or inter-state fraud corridors. This is what a LEA commanding officer needs, not hop-level case details.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">PS requires LEA analytics dashboard</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Add to dashboard/page.tsx:</strong> A summary stats bar showing: Cases This Week, Total Traced Value (₹), CRITICAL Risk Cases, Average Trace Time</li>
+        <li><strong>Add a bar chart</strong> showing fraud type distribution across all cases (using <code>fraud_type</code> from intake)</li>
+        <li><strong>Add a VASP frequency table:</strong> "Top 5 destination VASPs this month" — computed by aggregating <code>attribution.vasp_name</code> across all cases</li>
+        <li><strong>All of this runs on SQLite queries</strong> — no new infrastructure needed</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SECTION 7 =================== -->
+<div class="sec" id="s7">
+  <div class="sec-hdr">
+    <span class="sec-num">07</span>
+    <h2>Overall System Improvements</h2>
+  </div>
+
+  <!-- GAP 7.1 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--purple-dim);">🔍</div>
+      <div>
+        <div class="gap-title">OFAC Screening Only Checks Exact Addresses — Misses Named Entities</div>
+        <div class="gap-sub">The <code>screen_ofac_sanctions()</code> function performs exact address matching. But OFAC also designates named individuals and organizations whose wallet addresses change. If Lazarus Group creates a new wallet not yet in the SDN list, it won't be caught. The UN Security Council 1718 Committee maintains a separate North Korea cryptocurrency sanctions list that is not integrated.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-med">Medium</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Add fuzzy entity name matching — when an Etherscan label for an address matches a known SDN entity name (e.g., "Lazarus Group", "Tornado Cash"), flag as a soft OFAC hit with lower confidence</li>
+        <li><strong>Add:</strong> Chainalysis free reactor links are publicly published for major hacks. Cross-reference the traced wallets against publicly disclosed hack attribution addresses (Ronin bridge, Harmony bridge)</li>
+        <li><strong>Indian equivalent:</strong> ED/CBI FIR-linked addresses — if any address in the trace appears in published enforcement orders, flag it</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 7.2 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--purple-dim);">🧠</div>
+      <div>
+        <div class="gap-title">AI Copilot Prompt Has No Fraud-Type Context — Generic Forensic Output</div>
+        <div class="gap-sub">The system prompt says "cryptocurrency forensic intelligence reasoning engine" but the user prompt doesn't inject the fraud type (investment scam vs ransomware vs sextortion). The AI generates a generic briefing. A sextortion case briefing and a ransomware case briefing should read completely differently — sextortion requires urgency on victim privacy, ransomware requires decryption timeline context.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-med">Medium</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> Inject <code>fraud_type</code> from the case record into the AI prompt: "This is a [INVESTMENT_FRAUD] case. Adjust your investigative recommendations to prioritize [asset freeze over evidence preservation for investment fraud]."</li>
+        <li>Add fraud-type-specific instruction addenda to the system prompt that activate based on the case type</li>
+        <li>This costs zero extra tokens if done as a conditional append to the system prompt</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- GAP 7.3 -->
+  <div class="gap">
+    <div class="gap-hdr">
+      <div class="gap-icon" style="background:var(--teal-dim);">🌐</div>
+      <div>
+        <div class="gap-title">BSC / BNB Chain Is Listed in VASP Registry But Not in Trace Engine</div>
+        <div class="gap-sub">The VASP registry lists Binance, WazirX, and others as supporting BNB/BSC chain. The cluster data mentions BSC addresses. But the <code>detect_chain()</code> function only supports ETH, TRON, BTC, and POLYGON. A BSC address starting with <code>0x</code> would be classified as ETH and traced against Ethereum's blockchain — returning wrong or empty results.</div>
+      </div>
+      <div class="gap-meta"><span class="badge b-high">High</span><span class="eff">Data inconsistency</span></div>
+    </div>
+    <div class="gap-body">
+      <ul class="gap-list">
+        <li><strong>Fix:</strong> BSC addresses are identical format to ETH (<code>0x...</code>, 42 chars). Add BSC as a configurable chain with <code>BSC_RPC_URL</code> (Ankr provides free BSC RPC: <code>rpc.ankr.com/bsc</code>)</li>
+        <li><strong>Chain disambiguation:</strong> When an <code>0x</code> address is submitted, check both Etherscan and BSCScan for transaction history. The chain with more transactions in the last 90 days wins</li>
+        <li><strong>VASP registry fix:</strong> Add explicit <code>chain: "BSC"</code> labels to BSC-specific hot wallet addresses in <code>vasp_cluster.py</code></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- =================== MASTER TABLE =================== -->
+<div class="sec">
+  <div class="sec-hdr">
+    <span class="sec-num">∑</span>
+    <h2>Complete Gap Registry — Priority Order</h2>
+  </div>
+  <table class="mt">
+    <tr><th>#</th><th>Gap</th><th>Module</th><th>Severity</th><th>PS Alignment</th><th>Fix Effort</th></tr>
+    <tr><td>1</td><td>Attribution resolver finds furthest VASP, not nearest</td><td>attribution_resolver.py</td><td><span class="badge b-crit">Critical</span></td><td>Core PS requirement</td><td>2h</td></tr>
+    <tr><td>2</td><td>Bridge destination hardcoded — PROVEN evidence fabricated</td><td>trace_engine.py</td><td><span class="badge b-crit">Critical</span></td><td>Evidence integrity</td><td>3h</td></tr>
+    <tr><td>3</td><td>Demo mode hardcodes WAZIRX for all cases</td><td>trace_engine.py</td><td><span class="badge b-crit">Critical</span></td><td>Demo correctness</td><td>30min</td></tr>
+    <tr><td>4</td><td>MULE_NETWORK fires on missing timestamps via 600s fallback</td><td>mule_network.py</td><td><span class="badge b-crit">Critical</span></td><td>Evidence accuracy</td><td>1h</td></tr>
+    <tr><td>5</td><td>No cross-case wallet clustering — organized crime invisible</td><td>database.py</td><td><span class="badge b-crit">Critical</span></td><td>"clustering" in PS</td><td>3h</td></tr>
+    <tr><td>6</td><td>PEEL_CHAIN rule likely missing — phantom +15 risk points</td><td>typology_engine.py</td><td><span class="badge b-crit">Critical</span></td><td>Risk integrity</td><td>2h</td></tr>
+    <tr><td>7</td><td>DeFi protocols entirely undetected</td><td>trace_engine.py</td><td><span class="badge b-crit">Critical</span></td><td>"DeFi protocols" in PS</td><td>2h</td></tr>
+    <tr><td>8</td><td>No automated alert dispatch on CRITICAL risk</td><td>new module</td><td><span class="badge b-crit">Critical</span></td><td>"automated alerts" in PS</td><td>1.5h</td></tr>
+    <tr><td>9</td><td>Forward-only BFS — upstream aggregation invisible</td><td>trace_engine.py</td><td><span class="badge b-high">High</span></td><td>"fund movement patterns"</td><td>4h</td></tr>
+    <tr><td>10</td><td>Risk score has no amount factor</td><td>risk_assessment.py</td><td><span class="badge b-high">High</span></td><td>Triage logic</td><td>30min</td></tr>
+    <tr><td>11</td><td>Risk score ignores cross-chain bridge events</td><td>risk_assessment.py</td><td><span class="badge b-high">High</span></td><td>"multi-chain" in PS</td><td>30min</td></tr>
+    <tr><td>12</td><td>Risk score ignores offshore VASP jurisdiction</td><td>risk_assessment.py</td><td><span class="badge b-high">High</span></td><td>Freeze coordination</td><td>20min</td></tr>
+    <tr><td>13</td><td>RAPID_HOP threshold chain-agnostic — BTC false positives</td><td>rapid_hop.py</td><td><span class="badge b-high">High</span></td><td>Accuracy</td><td>30min</td></tr>
+    <tr><td>14</td><td>90-day cutoff silently drops data with no completeness penalty</td><td>trace_engine.py</td><td><span class="badge b-high">High</span></td><td>Data integrity</td><td>1h</td></tr>
+    <tr><td>15</td><td>Timeout returns empty — no partial checkpoint</td><td>trace_engine.py</td><td><span class="badge b-high">High</span></td><td>Reliability</td><td>1h</td></tr>
+    <tr><td>16</td><td>elapsed_hours defaults to 2.5 — false urgency</td><td>recovery_estimate.py</td><td><span class="badge b-high">High</span></td><td>Operational accuracy</td><td>45min</td></tr>
+    <tr><td>17</td><td>No FIU-IND compliance auto-draft in freeze notice</td><td>notice_generator.py</td><td><span class="badge b-high">High</span></td><td>India LEA requirement</td><td>1h</td></tr>
+    <tr><td>18</td><td>BSC chain listed in registry but not in trace engine</td><td>provider_manager.py</td><td><span class="badge b-high">High</span></td><td>Data consistency</td><td>1.5h</td></tr>
+    <tr><td>19</td><td>No LEA aggregate analytics dashboard</td><td>frontend</td><td><span class="badge b-high">High</span></td><td>"analytics dashboards" in PS</td><td>2h</td></tr>
+    <tr><td>20</td><td>Cycle detection loses convergence typology signal</td><td>trace_engine.py</td><td><span class="badge b-med">Medium</span></td><td>Pattern detection</td><td>1h</td></tr>
+    <tr><td>21</td><td>Hop decay uncapped — deep traces always UNRESOLVED</td><td>adaptive_vasp_scorer.py</td><td><span class="badge b-med">Medium</span></td><td>Attribution accuracy</td><td>30min</td></tr>
+    <tr><td>22</td><td>Single VASP candidate only — no ranked multi-VASP output</td><td>attribution_resolver.py</td><td><span class="badge b-med">Medium</span></td><td>"coordination with VASPs"</td><td>2h</td></tr>
+    <tr><td>23</td><td>No cross-rule compounding in risk score</td><td>risk_assessment.py</td><td><span class="badge b-med">Medium</span></td><td>Risk accuracy</td><td>30min</td></tr>
+    <tr><td>24</td><td>Recovery score has no fraud-type weighting</td><td>recovery_estimate.py</td><td><span class="badge b-med">Medium</span></td><td>PS lists 7 fraud types</td><td>1h</td></tr>
+    <tr><td>25</td><td>OFAC only exact address match — misses entity patterns</td><td>ofac_sanctions.py</td><td><span class="badge b-med">Medium</span></td><td>Sanctions accuracy</td><td>2h</td></tr>
+    <tr><td>26</td><td>AI copilot has no fraud-type context</td><td>ai_copilot.py</td><td><span class="badge b-med">Medium</span></td><td>Output relevance</td><td>30min</td></tr>
+    <tr><td>27</td><td>No scalable blockchain indexing — BFS rescans on every trace</td><td>trace_engine.py</td><td><span class="badge b-low">Low</span></td><td>"scalable indexing" in PS</td><td>8h</td></tr>
+    <tr><td>28</td><td>No Solana chain support — SOL listed in clusters only</td><td>provider_manager.py</td><td><span class="badge b-low">Low</span></td><td>Coverage</td><td>4h</td></tr>
+    <tr><td>29</td><td>No INR/USD dual amount display in trace hops</td><td>frontend</td><td><span class="badge b-low">Low</span></td><td>India context</td><td>30min</td></tr>
+    <tr><td>30</td><td>No geo-mapping of VASP jurisdictions in dashboard</td><td>frontend</td><td><span class="badge b-low">Low</span></td><td>Visual analytics</td><td>2h</td></tr>
+  </table>
+</div>
+
+</div>
+</body>
+</html>

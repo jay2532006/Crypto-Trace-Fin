@@ -42,7 +42,15 @@ class SAHYOGAdapter:
     def __init__(self, api_url: Optional[str] = None, auth_token: Optional[str] = None):
         self.api_url = api_url
         self.auth_token = auth_token
-        self.processed_bulletin_hashes = set()
+        # §8.4: Seed in-memory deduplication set from persistent SQLite storage on startup
+        self.processed_bulletin_hashes = self._load_persisted_hashes()
+
+    def _load_persisted_hashes(self) -> set:
+        """Loads previously persisted bulletin hashes to prevent duplicate ingestion after restart."""
+        try:
+            return {r["hash"] for r in canonical_db.get_all_intake_hashes(source="SAHYOG")}
+        except Exception:
+            return set()  # degrade gracefully, don't crash startup
 
     def is_operational(self) -> bool:
         """SAHYOG live gateway requires explicit authorized endpoint and token."""

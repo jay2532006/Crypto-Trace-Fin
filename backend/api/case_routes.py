@@ -156,3 +156,23 @@ def download_case_report_pdf(case_id: str, current_user: Dict[str, Any] = Depend
         },
     )
 
+
+@router.get("/cases/{case_id}/linked-cases")
+def get_linked_cases(case_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """§6.1: Retrieves cross-case linked investigations based on shared suspect/mule wallets."""
+    linked = db_manager.get_linked_cases_for_case(case_id)
+    return {
+        "case_id": case_id,
+        "linked_case_count": len(linked),
+        "linked_cases": linked,
+    }
+
+
+@router.get("/analytics/dashboard")
+def get_analytics_dashboard(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """§7.2: Retrieves aggregate LEA analytics dashboard metrics."""
+    return {
+        "status": "ok",
+        "data": db_manager.get_lea_aggregate_analytics(),
+    }
+

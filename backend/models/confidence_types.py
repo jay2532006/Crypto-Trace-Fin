@@ -21,4 +21,4 @@ NoticeStatus = Literal["DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED"]
 UserRole = Literal["INVESTIGATOR", "SUPERVISOR", "ADMINISTRATOR", "INTEGRATION_SERVICE"]
 
 # Recovery Eligibility
-DisplayTier = Literal["eligible", "ineligible"]
+DisplayTier = Literal["eligible", "ineligible", "insufficient_data"]

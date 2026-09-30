@@ -108,10 +108,16 @@ class TestPhase7CrossChain(unittest.TestCase):
         )
 
         self.assertTrue(len(res["cross_chain_links"]) > 0)
-        self.assertEqual(res["cross_chain_links"][0]["link_type"], "PROVEN")
+        # §1.3 FIX UPDATE: link_type must be HEURISTIC_CORRELATION when no real
+        # dest_tx_hash is returned by a provider call. PROVEN is only valid when
+        # a real on-chain delivery tx is confirmed — not from a literal constant.
+        self.assertEqual(res["cross_chain_links"][0]["link_type"], "HEURISTIC_CORRELATION",
+                         "§1.3: without a real provider dest_tx_hash, link_type must be HEURISTIC_CORRELATION")
         node_ids = [n["id"] for n in res["nodes"]]
         self.assertIn(across_spoke, node_ids)
-        self.assertIn("TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6", node_ids)
+        # §1.3: The hardcoded TRON recipient fabrication has been removed.
+        # We do NOT assert the old hardcoded TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6 address here.
+        # The bridge contract itself (across_spoke) is the correct to_addr for the edge.
 
 if __name__ == "__main__":
     unittest.main()

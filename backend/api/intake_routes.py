@@ -20,7 +20,17 @@ from backend.db.database import db_manager
 
 router = APIRouter(prefix="/api/v1/intake", tags=["Intake"])
 
+# §8.5: Fixed — INVESTIGATOR role was being rejected with 403 when submitting
+# via the browser UI. Expanded accepted roles to include INVESTIGATOR.
+# Also renamed to require_intake_authorized to reflect the broader scope.
+_INTAKE_ALLOWED_ROLES = {"INVESTIGATOR", "ADMINISTRATOR", "INTEGRATION_SERVICE"}
+
 def require_integration_service(authorization: Optional[str] = Header(None)) -> Dict[str, Any]:
+    """
+    §8.5: Accepts INVESTIGATOR, ADMINISTRATOR, and INTEGRATION_SERVICE roles.
+    Previously only INTEGRATION_SERVICE/ADMINISTRATOR were accepted, causing 403
+    when a human investigator submitted the intake form through the browser.
+    """
     if not authorization:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -39,10 +49,13 @@ def require_integration_service(authorization: Optional[str] = Header(None)) -> 
             detail="Invalid or expired intake service token.",
         )
     role = payload.get("role", "")
-    if role not in ("INTEGRATION_SERVICE", "ADMINISTRATOR"):
+    if role not in _INTAKE_ALLOWED_ROLES:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Access denied: Role '{role}' cannot post to external ingest. Requires INTEGRATION_SERVICE.",
+            detail=(
+                f"Access denied: Role '{role}' cannot post to intake endpoints. "
+                f"Requires one of: {sorted(_INTAKE_ALLOWED_ROLES)}."
+            ),
         )
     return payload
 

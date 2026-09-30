@@ -63,7 +63,13 @@ class TestPhase5Attribution(unittest.TestCase):
         self.assertTrue(resolved.exact)
 
     def test_04_demo_fixture_preserved(self):
-        """DEMO mode on CR-2026-MULE-IND-01 continues to attribute to WAZIRX."""
+        """
+        §1.2 FIX UPDATE: DEMO mode now routes through attribution_resolver.
+        The hardcoded WAZIRX key has been removed. The DEMO trace terminates at
+        0x28c6c06298d514db089934071355e5743bf21d60 which is shared by WAZIRX and BINANCE,
+        so either is a valid resolution. What must NOT happen is UNRESOLVED or a
+        completely unrelated VASP (e.g. KUCOIN).
+        """
         fix = CRYPTO_TRACE_FIXTURES[0]
         res = bounded_tracer.trace(
             start_address=fix["suspect_wallet"],
@@ -72,8 +78,15 @@ class TestPhase5Attribution(unittest.TestCase):
             case_id=fix["case_id"],
             mode="DEMO"
         )
-        self.assertIn("WazirX", res["attribution"]["vasp_name"])
-        self.assertIn(res["attribution"]["label_type"], ["VERIFIED", "INFERRED"])
+        # §1.2: Attribution must be resolved from real hop data, not hardcoded
+        self.assertIn(res["attribution"]["label_type"], ["VERIFIED", "INFERRED"],
+                      "DEMO trace must resolve to a matched VASP (not UNRESOLVED)")
+        # The DEMO trace hits 0x28c6c0... which is WAZIRX or BINANCE cluster
+        vasp_name = res["attribution"].get("vasp_name", "")
+        self.assertTrue(
+            "WazirX" in vasp_name or "Binance" in vasp_name,
+            f"DEMO trace terminal address matches WAZIRX/BINANCE cluster; got '{vasp_name}'"
+        )
 
 if __name__ == "__main__":
     unittest.main()

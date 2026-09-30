@@ -46,25 +46,43 @@ class TestPhase8IntakeAPI(unittest.TestCase):
         cls.investigator_headers = {"Authorization": f"Bearer {cls.investigator_token}"}
 
     def test_01_intake_rbac_enforcement(self):
-        """Verify strict auth: no token -> 401, investigator -> 403, service token -> 200."""
-        payload = {
-            "ncrp_ack_number": f"NCRP-RBAC-{int(datetime.now().timestamp())}",
+        """
+        §8.5 FIX: INVESTIGATOR role must now be accepted (was 403 — that was the bug).
+        Verify: no token → 401, investigator → 200, service → 200.
+        """
+        import time as _time
+        ts = int(_time.time() * 1000)  # millisecond precision to avoid dedup
+
+        # 1. No token -> 401
+        resp_no_token = self.client.post("/api/v1/intake/ncrp/complaint", json={
+            "ncrp_ack_number": f"NCRP-NOTOKEN-{ts}",
             "chain": "ETH",
             "suspect_wallet": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
             "reported_amount": 1000.0,
-        }
-        # 1. No token -> 401
-        resp_no_token = self.client.post("/api/v1/intake/ncrp/complaint", json=payload)
+        })
         self.assertEqual(resp_no_token.status_code, 401)
 
-        # 2. Investigator token -> 403
-        resp_investigator = self.client.post("/api/v1/intake/ncrp/complaint", json=payload, headers=self.investigator_headers)
-        self.assertEqual(resp_investigator.status_code, 403)
+        # 2. §8.5: INVESTIGATOR must now get 200 (not 403 — that was the bug).
+        resp_investigator = self.client.post("/api/v1/intake/ncrp/complaint", json={
+            "ncrp_ack_number": f"NCRP-INV-{ts}",  # unique ID
+            "chain": "ETH",
+            "suspect_wallet": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+            "reported_amount": 1000.0,
+        }, headers=self.investigator_headers)
+        self.assertEqual(resp_investigator.status_code, 200,
+                         "§8.5: INVESTIGATOR must be allowed to submit intake forms")
+        self.assertIn(resp_investigator.json()["status"], ["INGESTED", "EXISTING"])
 
-        # 3. Integration Service token -> 200
-        resp_service = self.client.post("/api/v1/intake/ncrp/complaint", json=payload, headers=self.service_headers)
+        # 3. Integration Service token -> 200 (backward-compat, different ncrp_ack_number)
+        resp_service = self.client.post("/api/v1/intake/ncrp/complaint", json={
+            "ncrp_ack_number": f"NCRP-SVC-{ts}",  # unique ID
+            "chain": "ETH",
+            "suspect_wallet": "0xd8da6bf26964af9d7eed9e03e53415d37aa96046",
+            "reported_amount": 2000.0,
+        }, headers=self.service_headers)
         self.assertEqual(resp_service.status_code, 200)
-        self.assertEqual(resp_service.json()["status"], "INGESTED")
+        self.assertIn(resp_service.json()["status"], ["INGESTED", "EXISTING"])
+
 
     def test_02_security_leak_rejection(self):
         """Private key payload rejected with 400 Bad Request; no case created."""

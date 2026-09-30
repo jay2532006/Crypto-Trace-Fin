@@ -21,9 +21,19 @@ TIMEOUT = 8
 class EVMAdapter(ChainAdapterBase):
     def __init__(self, chain_id: str = "ETH", rpc_url: str = "", etherscan_key: str = ""):
         super().__init__(chain_id)
-        self.rpc_url = rpc_url or (
-            "https://polygon.drpc.org" if self.chain_id == "POLYGON" else "https://ethereum-rpc.publicnode.com"
-        )
+        if self.chain_id == "POLYGON":
+            default_rpc = "https://polygon.drpc.org"
+            self.chain_id_num = 137
+            self.asset = "MATIC"
+        elif self.chain_id in ("BSC", "BNB"):
+            default_rpc = os.getenv("BSC_RPC_URL", "https://rpc.ankr.com/bsc")
+            self.chain_id_num = 56
+            self.asset = "BNB"
+        else:
+            default_rpc = "https://ethereum-rpc.publicnode.com"
+            self.chain_id_num = 1
+            self.asset = "ETH"
+        self.rpc_url = rpc_url or default_rpc
         self.etherscan_key = etherscan_key or os.getenv("ETHERSCAN_API_KEY", "")
 
     def validate_address(self, address: str) -> bool:
@@ -40,12 +50,20 @@ class EVMAdapter(ChainAdapterBase):
             return False
 
     def fetch_transfers(self, address: str, limit: int = 50) -> List[Transfer]:
-        """Fetches transactions via Etherscan / RPC with raw payload storage."""
+        """Fetches transactions via Etherscan / BSCScan / RPC with raw payload storage."""
         if not self.validate_address(address):
             return []
 
         transfers: List[Transfer] = []
-        chain_id_num = 137 if self.chain_id == "POLYGON" else 1
+        if self.chain_id == "POLYGON":
+            chain_id_num = 137
+            native_asset = "MATIC"
+        elif self.chain_id in ("BSC", "BNB"):
+            chain_id_num = 56
+            native_asset = "BNB"
+        else:
+            chain_id_num = 1
+            native_asset = "ETH"
 
         # Use Etherscan / Polygonscan API for historical account transfers
         url = (
@@ -91,7 +109,7 @@ class EVMAdapter(ChainAdapterBase):
                                 from_addr=from_addr,
                                 to_addr=to_addr,
                                 amount=round(eth_amount, 6),
-                                asset="MATIC" if self.chain_id == "POLYGON" else "ETH",
+                                asset=native_asset,
                                 direction="OUT" if from_addr == address.lower() else "IN",
                                 raw_payload_hash=payload_hash,
                                 finality_state="CONFIRMED",

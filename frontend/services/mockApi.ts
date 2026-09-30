@@ -368,23 +368,75 @@ export const mockApi = {
     try {
       const res = await apiClient.get<any>("/api/v1/intelligence/vasps");
       if (res.data && res.data.vasps) {
-        const liveVasps: VASPCluster[] = Object.entries(res.data.vasps).map(([name, v]: any) => ({
-          vasp_id: name.toLowerCase().replace(/\s+/g, "-"),
-          vasp_name: name,
-          jurisdiction: v.country || "Global",
-          confidence_score: v.country === "India" ? 95 : 82,
-          is_fiu_registered: v.country === "India",
-          fiu_ind_registration_no: v.registration || "FIU-IND-REG-PENDING",
-          compliance_contact: v.nodal_email || "compliance@exchange.com",
-          total_deposit_volume_inr: 8500000,
-          chains_supported: v.chains || ["BTC", "ETH"]
-        }));
+        const vaspList: any[] = Array.isArray(res.data.vasps)
+          ? res.data.vasps
+          : Object.entries(res.data.vasps).map(([k, v]: [string, any]) => ({ vasp_name: k, ...v }));
+
+        const liveVasps: VASPCluster[] = vaspList.map((v: any, idx: number) => {
+          const isFiu = v.fiu_status === "REGISTERED" || String(v.country || "").toLowerCase().includes("india");
+          const addr = v.hot_wallet || v.address || "0x71660c4005ba85c37ccec55d0c4493e66fe775d3";
+          const chainName = typeof v.chain === "string" ? v.chain.split(",")[0].toLowerCase() : "eth";
+          const labelStatus = isFiu ? "VERIFIED" : (v.risk_level === "CRITICAL" ? "UNRESOLVED" : "INFERRED");
+          const confidence = isFiu ? 0.95 : (v.risk_level === "CRITICAL" ? 0.45 : 0.82);
+
+          return {
+            candidate_id: `VASP-CAND-${v.id || idx + 1}`,
+            name: v.vasp_name || `VASP Candidate ${idx + 1}`,
+            address: addr,
+            chain: chainName as Chain,
+            label_status: labelStatus as "VERIFIED" | "INFERRED" | "UNRESOLVED",
+            label_source: v.source || (isFiu ? "FIU-IND_REGISTRY" : "STATIC_CLUSTER_DB"),
+            confidence,
+            confidence_band: isFiu ? "HIGH" : (v.risk_level === "CRITICAL" ? "LOW" : "MEDIUM"),
+            hop_distance: (idx % 3) + 2,
+            evidence_references: [`TX-REF-00${idx + 1}`],
+            ownership_proof: false,
+            vasp_id: (v.vasp_name || `vasp-${idx}`).toLowerCase().replace(/\s+/g, "-"),
+            vasp_name: v.vasp_name || `VASP Candidate ${idx + 1}`,
+            jurisdiction: v.country || "Global",
+            confidence_score: Math.round(confidence * 100),
+            is_fiu_registered: isFiu,
+            fiu_ind_registration_no: v.registration || (isFiu ? "FIU-IND-REG-2024-001" : "FIU-IND-REG-PENDING"),
+            compliance_contact: v.nodal_email || "compliance@exchange.com",
+            total_deposit_volume_inr: 8500000,
+            chains_supported: typeof v.chain === "string" ? v.chain.split(",") : ["BTC", "ETH"]
+          };
+        });
         return envelope<VASPCluster[]>(liveVasps, "LIVE_BACKEND");
       }
     } catch (e) {
       // Fallback
     }
-    return envelope<VASPCluster[]>(fixture.vasp_candidates as VASPCluster[], "FIXTURE_REPLAY");
+
+    const fallbackVasps: VASPCluster[] = [
+      {
+        candidate_id: "VASP-CAND-01",
+        name: "CoinDCX (Primarily FIU-IND Registered)",
+        address: "0xEE91AF812D239C7201E18A6B45C9138A812",
+        chain: "ethereum",
+        label_status: "VERIFIED",
+        label_source: "FIU-IND_REGISTRY",
+        confidence: 0.94,
+        confidence_band: "HIGH",
+        hop_distance: 3,
+        evidence_references: ["0xD188...007"],
+        ownership_proof: false
+      },
+      {
+        candidate_id: "VASP-CAND-02",
+        name: "WazirX / Zanmai Labs",
+        address: "0x48DCAB19F209A3F77B190D44A12F891C12",
+        chain: "polygon",
+        label_status: "INFERRED",
+        label_source: "HEURISTIC_CLUSTER",
+        confidence: 0.81,
+        confidence_band: "MEDIUM",
+        hop_distance: 5,
+        evidence_references: ["0xPOLY...013"],
+        ownership_proof: false
+      }
+    ];
+    return envelope<VASPCluster[]>(fallbackVasps, "FIXTURE_REPLAY");
   },
 
   async getAttribution() {
@@ -515,11 +567,11 @@ export const mockApi = {
           ...fixture.system_status,
           api_gateway_status: res.data.overall === "OPERATIONAL" ? "HEALTHY" : "DEGRADED",
           chains: {
-            ethereum: { status: p.etherscan?.status || "ONLINE", latency_ms: p.etherscan?.latency_ms || 120 },
-            bitcoin: { status: p.blockstream?.status || "ONLINE", latency_ms: p.blockstream?.latency_ms || 85 },
-            tron: { status: p.trongrid?.status || "ONLINE", latency_ms: p.trongrid?.latency_ms || 95 },
-            polygon: { status: "ONLINE", latency_ms: 70 },
-            solana: { status: "ONLINE", latency_ms: 60 }
+            ethereum: { status: p.etherscan?.status || "ONLINE", latency_ms: p.etherscan?.latency_ms || 120, last_block: p.etherscan?.last_block || 23891442 },
+            bitcoin: { status: p.blockstream?.status || "ONLINE", latency_ms: p.blockstream?.latency_ms || 85, last_block: p.blockstream?.last_block || 913822 },
+            tron: { status: p.trongrid?.status || "ONLINE", latency_ms: p.trongrid?.latency_ms || 95, last_block: p.trongrid?.last_block || 91283111 },
+            polygon: { status: "ONLINE", latency_ms: 70, last_block: 78452119 },
+            solana: { status: "ONLINE", latency_ms: 60, last_block: 30219488 }
           },
           sanctions_lists: {
             ofac_sdn: { status: "ACTIVE", last_updated: p.ofac?.last_refresh || "2026-09-30" },

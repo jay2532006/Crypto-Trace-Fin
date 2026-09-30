@@ -49,7 +49,17 @@ from engine.demo_cases import get_demo_cases, get_case_by_id
 from engine.real_api import fetch_real_data
 from engine.neo4j_engine import check_neo4j_status, sync_trace_to_neo4j, execute_cypher, init_neo4j_schema
 
-from backend.api import case_router, trace_router, notice_router, evidence_router, auth_router, intake_router, copilot_router
+from backend.api import (
+    case_router,
+    trace_router,
+    notice_router,
+    evidence_router,
+    auth_router,
+    intake_router,
+    copilot_router,
+    system_router,
+    ws_router,
+)
 from backend.tracing.trace_engine import bounded_tracer, TraceConstraints
 from backend.fixtures.demo_cases_v2 import get_crypto_trace_fixtures
 from backend.legal.notice_generator import notice_generator
@@ -65,7 +75,7 @@ if _app_env == "production" and _secret_key == "cryptotrace-lea-insecure-dev-sec
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
-    title="CryptoTrace LEA â€” SIH 26183 Investigation Platform",
+    title="CryptoTrace LEA — SIH 26183 Investigation Platform",
     description="Real-Time Crypto Fraud Attribution System for Indian Law Enforcement (MHA / I4C).",
     version="2.0.0-SIH26183",
 )
@@ -88,6 +98,8 @@ app.include_router(evidence_router)
 app.include_router(auth_router)
 app.include_router(intake_router)
 app.include_router(copilot_router)
+app.include_router(system_router)
+app.include_router(ws_router)
 
 
 # â”€â”€â”€ Database Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -180,6 +192,26 @@ def get_provider_health():
     """Live provider health check with actual latency measurements."""
     from backend.health.provider_health import check_all_providers
     return check_all_providers()
+
+
+@app.get("/api/v1/alerts")
+def get_alerts_endpoint(limit: int = 50, current_user: Dict[str, Any] = Depends(get_current_user)):
+    """§7.1: Returns automated alerts for CRITICAL risk, sanctions hits, or high-velocity mule events."""
+    from backend.alerts.alert_dispatcher import alert_dispatcher
+    return {
+        "status": "ok",
+        "alerts": alert_dispatcher.get_recent_alerts(limit=limit),
+    }
+
+
+@app.get("/api/v1/analytics/dashboard")
+def get_analytics_dashboard_endpoint(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """§7.2: Returns LEA aggregate analytics dashboard metrics from authoritative database."""
+    from backend.db.database import canonical_db
+    return {
+        "status": "ok",
+        "data": canonical_db.get_lea_aggregate_analytics(),
+    }
 
 
 @app.get("/api/config")
@@ -502,10 +534,18 @@ class CypherRequest(BaseModel):
     params: Optional[Dict[str, Any]] = None
 
 
+@app.get("/api/graph/status")
 @app.get("/api/neo4j/status")
-def get_neo4j_telemetry():
-    """Fetch live Neo4j Aura Cloud graph status, telemetry, and node/relationship counts."""
+def get_graph_telemetry():
+    """Fetch live graph status, telemetry, and node/relationship counts (KùzuDB / Neo4j)."""
     return check_neo4j_status()
+
+
+@app.get("/api/graph/subgraph")
+def get_graph_subgraph_endpoint(limit: int = 50):
+    """Retrieve local graph nodes and edges for Cytoscape.js rendering."""
+    from engine.kuzu_engine import get_subgraph
+    return get_subgraph(limit=limit)
 
 
 @app.post("/api/neo4j/query")
@@ -520,9 +560,10 @@ def run_neo4j_cypher(req: CypherRequest):
     )
 
 
+@app.post("/api/graph/sync")
 @app.post("/api/neo4j/sync")
-def sync_neo4j_trace(trace_data: Dict[str, Any]):
-    """Manually trigger trace graph synchronization to Neo4j Aura."""
+def sync_graph_trace(trace_data: Dict[str, Any]):
+    """Trigger trace graph synchronization to the local KùzuDB graph engine."""
     return sync_trace_to_neo4j(trace_data)
 
 

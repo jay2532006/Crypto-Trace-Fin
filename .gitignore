@@ -43,8 +43,11 @@ wheels/
 
 # Database & Runtime
 *.db
+*.db.wal
+*.wal
 *.sqlite3
 data/*.db
+data/*.wal
 data/sahyog.db
 data/raw/
 data/audit/

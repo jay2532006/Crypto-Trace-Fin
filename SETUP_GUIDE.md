@@ -180,14 +180,17 @@ You should land on the login page. Use these pre-seeded credentials:
 ## 5. Running the Test Suite
 
 ```bash
-# Run all 51 backend tests
-python -m pytest backend/tests -v
+# Run all 129 backend tests across 18 test files
+pytest backend/tests/ -v
 
-# Run a specific phase
-python -m pytest backend/tests/test_phase5_attribution.py -v
-python -m pytest backend/tests/test_phase6_mixer_boundary.py -v
-python -m pytest backend/tests/test_phase7_cross_chain.py -v
-python -m pytest backend/tests/test_phase8_intake_api.py -v
+# Run golden baseline non-regression tests (10 baseline fixtures)
+pytest backend/tests/test_phase0_logic_fixes.py -v
+
+# Run core logic resilience, detection gap, and accuracy suites
+pytest backend/tests/test_phase1_resilience.py backend/tests/test_phase2_detection_gaps.py backend/tests/test_phase3_accuracy.py -v
+
+# Run external boundary and WebSocket stream suites
+pytest backend/tests/test_phase4_external_boundaries.py backend/tests/test_phase4_demo_polish.py backend/tests/test_phase5_polish.py -v
 
 # Frontend type check (zero errors expected)
 npm --prefix frontend run typecheck
@@ -198,7 +201,7 @@ npm --prefix frontend run build
 
 Expected output:
 ```
-51 passed in X.XXs
+======================= 129 passed, 4 warnings in 7.17s =======================
 ```
 
 ---

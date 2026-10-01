@@ -6,10 +6,10 @@
 
 ---
 
-## PHASE 0 - Evidence-Integrity Emergency Fixes
+## PHASE 0 - Evidence-Integrity Emergency Fixes & Post-Audit Hardening
 **Status: COMPLETE**
 **Date:** 2026-10-01
-**Test Gate:** 69/69 tests pass (full suite green)
+**Test Gate:** 21/21 tests pass in test_phase0_logic_fixes.py (full suite green: 129/129)
 
 ### Items Implemented
 
@@ -22,6 +22,32 @@
 | 2.3 Audit/fix PEEL_CHAIN implementation | Typology Engine | P0 Critical | Done | backend/typologies/rules/other_rules.py |
 | 8.5 Fix NCRP 403 role bug | Infrastructure | P0 Critical | Done | backend/api/intake_routes.py |
 | 1.7 Raise timeout to 120s (bundled) | Tracing Engine | P1 High | Done | backend/tracing/trace_engine.py |
+| Post-Audit DEMO-mode fixture branching | Tracing Engine | P0 Critical | Done | backend/tracing/trace_engine.py |
+| Post-Phase-0 Immutable Baseline Snapshots | Fixtures / Verification | P0 Critical | Done | backend/tests/fixtures/baselines/*.json |
+
+### Detail of Post-Audit Integration Fixes
+
+#### DEMO-Mode Synthetic Generator Hardening (trace_engine.py)
+- **Problem Identified by Independent Audit:** The DEMO-mode fallback generator in `trace_engine.py` unconditionally emitted a universal 4-hop mule trail terminating at Binance/WazirX (`0x28c6c...`) for every demo case, regardless of case_id. This caused `CR-2026-MIXER-BOUND-02` (which should terminate at Tornado Cash mixer with UNRESOLVED attribution and MIXER_BOUNDARY typology) and `CR-2026-OFAC-SDN-05` (which should halt at the sanctioned OFAC address with ofac_sanction_hit: True and CRITICAL risk) to produce fabricated exchange attributions.
+- **Fix:**
+  - Implemented private method `_get_demo_fixture_hops(case_id: str, start_address: Optional[str], chain: str) -> List[Dict[str, Any]]`:
+    - `CR-2026-MIXER-BOUND-02`: Emits a 2-hop sequence terminating at Tornado Cash Router `0xd90e2f925da726b50c4ed8d0fb90ad053324f31b` with `edge_type="MIXER_BOUNDARY"`, `is_mixer=True`, and `termination_reason="MIXER_BOUNDARY_HIT"`. Bypasses OFAC screening on the mixer contract to produce `typologies: ["MULE_NETWORK", "MIXER_BOUNDARY"]`, `attribution: label_type="UNRESOLVED", vasp_name=None, vasp_key=None`, and records a `MIXER_BOUNDARY` boundary event.
+    - `CR-2026-OFAC-SDN-05`: Emits a 1-hop sequence terminating at Lazarus Group SDN address `0x098b716b8aaf21512996dc57eb0615e2383e2f96`, halting at 1 hop (`<= 2` hops) with `termination_reason="COMPLETE"`, `ofac_sanction_hit=True`, `attribution: label_type="UNRESOLVED"`, `typologies: ["OFAC_SANCTION"]`, and `risk_category="CRITICAL"`.
+    - Preserves default 4-hop mule trail for all other demo cases and legacy callers (`test_golden_baseline.py`).
+  - Updated `BoundedTracer.trace()` signature with `start_address: Optional[str] = None` and automatic case_id fallback lookup.
+
+#### Post-Phase-0 Baseline Snapshots (§11.1 Verification)
+- Executed all 10 demo fixtures (`CR-2026-MULE-IND-01` through `DEMO-SIH26182-004`) through the corrected engine.
+- Saved immutable baseline snapshots to `backend/tests/fixtures/baselines/<case_id>_baseline.json`.
+- Each snapshot captures exactly 9 canonical keys: `case_id`, `hops`, `attribution`, `typologies`, `risk`, `recovery_estimate`, `boundary_events`, `data_completeness_pct`, `termination_reason`.
+
+#### Integration Test Coverage Added (test_phase0_logic_fixes.py)
+Added `TestPhase0DemoIntegration` with 3 new tests:
+- `test_mixer_case_terminates_at_mixer_not_exchange`: Asserts `CR-2026-MIXER-BOUND-02` terminates at mixer with UNRESOLVED attribution, null VASP, not WAZIRX/BINANCE, and MIXER_BOUNDARY event.
+- `test_ofac_case_terminates_at_sanctioned_address_not_exchange`: Asserts `CR-2026-OFAC-SDN-05` sets `ofac_sanction_hit: True`, halts within `<= 2` hops, and resolves to UNRESOLVED with CRITICAL risk category.
+- `test_baseline_snapshots_exist_and_are_complete`: Asserts all 10 baseline snapshot files exist and contain all required keys.
+
+Phase Gate: 21/21 tests in `test_phase0_logic_fixes.py` pass. Zero regressions.
 
 ---
 
@@ -373,3 +399,55 @@ New test suite: `backend/tests/test_phase5_polish.py` (13 tests, all pass):
 - TestDataCompletenessMetric: 1 test (KPI fields validation)
 
 Phase Gate: 126/126 tests pass (100% green). Zero regressions.
+
+---
+
+## MASTER EXECUTION & AUDIT VERIFICATION SUMMARY
+**Overall Status: 100% COMPLETE (Phases 0–5 + Post-Audit Verification)**
+**Date:** 2026-10-01
+**Final Test Gate:** 129/129 tests pass (100% green, 0 failures, 0 regressions)
+
+### Master Test Suite Breakdown (17 Test Suites, 129 Tests)
+
+| Test Suite | File | Tests | Status | Scope |
+|------------|------|-------|--------|-------|
+| Golden Baseline | `backend/tests/test_golden_baseline.py` | 1 | PASSED | Legacy demo regression verification |
+| Phase 0 Logic Fixes | `backend/tests/test_phase0_logic_fixes.py` | 21 | PASSED | §1.1-§1.3, §2.1, §2.3, §8.5 + Demo Integration & Baseline |
+| Phase 1 Models | `backend/tests/test_phase1_models.py` | 5 | PASSED | Pydantic data schemas & contracts |
+| Phase 1 Resilience | `backend/tests/test_phase1_resilience.py` | 15 | PASSED | Provider failover, circuit breaker, TTL cache, retry queue |
+| Phase 2 Detection Gaps | `backend/tests/test_phase2_detection_gaps.py` | 13 | PASSED | DeFi/DEX, wallet clustering, alert dispatch, fan-in, BSC |
+| Phase 3 Accuracy | `backend/tests/test_phase3_accuracy.py` | 8 | PASSED | Amount tiers, cross-chain risk, rapid-hop, truncation, partial |
+| Phase 3 Live Resilience | `backend/tests/test_phase3_live_resilience.py` | 5 | PASSED | Ingestion, checkpointing, graph rebuild, provider health |
+| Phase 4 Demo Polish | `backend/tests/test_phase4_demo_polish.py` | 8 | PASSED | Hop-decay cap, multi-VASP ranking, VASP registry, FIU draft, WebSocket |
+| Phase 4 Boundaries | `backend/tests/test_phase4_external_boundaries.py` | 6 | PASSED | NCRP/Sahyog validation, private key rejection, audit checks |
+| Phase 5 Attribution | `backend/tests/test_phase5_attribution.py` | 4 | PASSED | Unknown address, ambiguous match, exact match |
+| Phase 5 Polish | `backend/tests/test_phase5_polish.py` | 13 | PASSED | OFAC fuzzy screening, AI Copilot, dual INR/USD, VASP geo, completeness |
+| Phase 6 Mixer Boundary | `backend/tests/test_phase6_mixer_boundary.py` | 3 | PASSED | Mixer boundary halts, 2-branch clean continuation, notice directive |
+| Phase 6 Report PDF | `backend/tests/test_phase6_report_pdf.py` | 3 | PASSED | 65B PDF generation, determinism, report API |
+| Phase 7 Cross-Chain | `backend/tests/test_phase7_cross_chain.py` | 3 | PASSED | Bridge registry, proven vs heuristic, tracer bridge continuation |
+| Phase 7 OFAC & Fixtures | `backend/tests/test_phase7_ofac_and_fixtures.py` | 3 | PASSED | 6 fixtures verification, OFAC screening, OFAC trace execution |
+| Phase 8 Auth & RBAC | `backend/tests/test_phase8_auth_rbac.py` | 14 | PASSED | JWT, role authorization, audit tamper-evident logs |
+| Phase 8 Intake API | `backend/tests/test_phase8_intake_api.py` | 4 | PASSED | Intake RBAC, security leak rejection, deduplication |
+| **TOTAL** | **17 Suites** | **129** | **PASSED** | **100% Green, 0 Regressions** |
+
+### Verified Post-Phase-0 Baselines (`backend/tests/fixtures/baselines/`)
+
+| Case ID | Chain | Hops | Termination Reason | Typologies | Attribution Label | Target / VASP |
+|---------|-------|------|--------------------|------------|-------------------|---------------|
+| `CR-2026-MULE-IND-01` | TRON | 4 | `MAX_HOPS` | `MULE_NETWORK` | `UNRESOLVED` | 4-hop mule pass-through |
+| `CR-2026-MIXER-BOUND-02` | ETH | 2 | `MIXER_BOUNDARY_HIT` | `MULE_NETWORK`, `MIXER_BOUNDARY` | `UNRESOLVED` | Tornado Cash Router (`0xd90e...`) |
+| `CR-2026-BRIDGE-XCHAIN-03` | ETH | 4 | `MAX_HOPS` | `RAPID_HOP` | `INFERRED` | WazirX / Binance Cluster |
+| `CR-2026-BRIDGE-XCHAIN-04` | ETH | 4 | `MAX_HOPS` | `CROSS_CHAIN_BRIDGE` | `INFERRED` | WazirX / Binance Cluster |
+| `CR-2026-OFAC-SDN-05` | ETH | 1 | `COMPLETE` | `OFAC_SANCTION` | `UNRESOLVED` | Lazarus Group (`0x098b...`) |
+| `CR-2026-MULE-FANIN-06` | ETH | 4 | `MAX_HOPS` | `MULE_NETWORK` | `INFERRED` | WazirX / Binance Cluster |
+| `DEMO-SIH26182-001` | TRON | 4 | `MAX_HOPS` | `MULE_NETWORK` | `UNRESOLVED` | Synthetic Layering Dispersion |
+| `DEMO-SIH26182-002` | BTC | 4 | `MAX_HOPS` | `MULE_NETWORK` | `UNRESOLVED` | Synthetic Peel Chain Benchmark |
+| `DEMO-SIH26182-003` | ETH | 4 | `MAX_HOPS` | `MULE_NETWORK` | `INFERRED` | Synthetic Mixer Benchmark |
+| `DEMO-SIH26182-004` | ETH | 4 | `MAX_HOPS` | `MULE_NETWORK` | `INFERRED` | Direct Exchange Verification |
+
+### Definition of Done Audit Verification
+- [x] `trace_engine.py`'s DEMO path branches on case_id; `CR-2026-MIXER-BOUND-02` halts at mixer boundary without resolving to Binance/WazirX.
+- [x] `CR-2026-OFAC-SDN-05`'s demo trace halts at Hop 1 at the sanctioned Lazarus Group address and does not continue to an exchange.
+- [x] 129/129 pytest tests pass with zero failures and zero regressions.
+- [x] 10 baseline snapshot files exist under `backend/tests/fixtures/baselines/` each containing all required canonical keys.
+

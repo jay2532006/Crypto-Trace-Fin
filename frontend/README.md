@@ -22,9 +22,9 @@ Production-ready, evidence-first, institutional frontend for **CryptoTrace LEA**
 
 ### 1. Start the FastAPI Backend (Terminal 1)
 ```powershell
-cd d:\CRYPTO-TRACE\tracex-sahyog-main\tracex-sahyog-main
-python -m uvicorn backend.main:app --host 127.0.0.1 --port 8765 --reload
+python -m uvicorn app:app --host 127.0.0.1 --port 8765 --reload
 ```
+
 
 ### 2. Start the Next.js Frontend (Terminal 2)
 ```powershell
@@ -136,6 +136,7 @@ frontend/
 # Run TypeScript Typecheck (0 errors)
 npm run typecheck
 
-# Run Next.js Production Build (0 errors, 16 static routes)
+# Run Next.js Production Build (0 errors, 18 static routes compiled)
 npm run build
 ```
+

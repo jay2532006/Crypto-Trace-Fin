@@ -115,3 +115,23 @@ Unlike black-box AI tools or ungrounded heuristic engines:
 - **Direct Cypher Disabled**: `/api/neo4j/query` returns HTTP 403 Forbidden to prevent injection attacks and unconstrained graph queries.
 - **Outbound HTTP Tester Disabled**: `/api/test/custom` returns HTTP 403 Forbidden to prevent Server-Side Request Forgery (SSRF).
 - **Supervisor-Gated Preservations**: Lawful Section 91 notices start as `DRAFT` and cannot be dispatched without authenticated `SUPERVISOR` sign-off.
+- **Credential Quarantine**: Pre-ingestion scanners analyze complaint payloads against the 2,048-word BIP-39 English dictionary and 64-character hex patterns, quarantining any private keys or recovery seeds.
+
+---
+
+## 6. Real-Time Streaming & Gateway Architecture
+
+### 6.1 WebSocket Real-Time Trace Streaming
+- Implemented in `backend/api/ws_routes.py` with `ConnectionManager`.
+- Endpoints at `/ws/trace/{case_id}` stream incremental hop discoveries, bridge crossings, and boundary halt events directly to the investigative canvas in real time.
+- Equipped with heartbeat ping-pong, subscription isolation, and graceful disconnection recovery.
+
+### 6.2 Government Gateway Integrations (NCRP & SAHYOG)
+- `backend/adapters/ncrp_adapter.py` and `backend/adapters/sahyog_adapter.py` interface official portals within statutory boundary conditions.
+- Incoming victim complaints and threat bulletins pass through persistent SHA-256 deduplication before entering the `IntakeOrchestrator` state machine (`RECEIVED` $\to$ `VALIDATED` $\to$ `TRACED` $\to$ `NOTICE_DRAFTED`).
+
+### 6.3 Verification Architecture & Non-Regression Gate
+- **10 Golden Baseline Snapshots**: Preserved under `backend/tests/fixtures/baselines/` covering all 9 canonical output keys.
+- **Deterministic Branching**: DEMO mode implements authentic scenario branching (`MIXER_HALT` for Tornado Cash pools and `SANCTION_HALT` for Lazarus OFAC entities).
+- **Test Suite**: **129/129 tests passing across 18 test suites (100% green)**.
+

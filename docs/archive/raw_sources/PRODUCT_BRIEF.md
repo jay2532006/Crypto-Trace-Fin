@@ -222,12 +222,12 @@ backend/
 ├── config/           — AppConfig & feature flags
 ├── cross_chain/      — Bridge registry & cross-chain analyzer
 ├── db/               — SQLite schema manager & deduplication logic
-├── fixtures/         — 6 demonstration benchmark scenarios
+├── fixtures/         — 10 demonstration benchmark scenarios & immutable baselines
 ├── ingestion/        — IntakeOrchestrator state machine
 ├── legal/            — PDF ReportGenerator, notice drafting, mixer directives
 ├── models/           — Pydantic schemas & domain types
 ├── storage/          — Raw evidence payload repository
-├── tests/            — 51 unit & regression tests (all passing)
+├── tests/            — 129 unit & regression tests across 18 test files (100% passing)
 └── typologies/       — MixerRegistry, MuleNetwork, PeelChain, PrivacyAsset
 ```
 
@@ -238,10 +238,11 @@ backend/
 - **Feature flags**: `TRACE_STOP_AT_MIXER`, `TRACE_CROSS_CHAIN`, and `TRACE_OFAC_SANCTIONS` can be toggled independently via environment variables.
 
 ### API Surface
-The backend exposes 54 REST endpoints across 8 routers: AI Copilot, PDF Report, Intake, Tracing & Intelligence, Case Management, Statutory Notices, Audit & Evidence, and Authentication. Interactive documentation at `http://localhost:8765/docs`.
+The backend exposes 54 REST endpoints across 8 routers: AI Copilot, PDF Report, Intake, Tracing & Intelligence, Case Management, Statutory Notices, Audit & Evidence, and Authentication, plus WebSocket streaming at `/ws/trace/{case_id}`. Interactive documentation at `http://localhost:8765/docs`.
 
 ### Test Coverage
-51 backend unit and regression tests across 8 test files — one per implementation phase — all passing. Frontend TypeScript compilation verified clean across all 18 static routes.
+129 backend unit and regression tests across 18 test files — all passing (100% green, 0 regressions). 10 immutable golden baseline snapshots in `backend/tests/fixtures/baselines/`. Frontend TypeScript compilation verified clean across all 18 static routes.
+
 
 ---
 

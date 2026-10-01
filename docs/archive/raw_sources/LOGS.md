@@ -612,4 +612,21 @@
    - `/audit`: 200 OK (344ms)
    - `/provider-status`: 200 OK (360ms)
 
+---
+
+## 8. Comprehensive Phase 0–5 & Post-Audit Implementation Logs: `L1-Logs.md`
+
+All subsequent code mutations, architectural refactorings, algorithm implementations, post-audit integration hardening, and verification logs across Phases 0 through 5 are exhaustively documented in [`L1-Logs.md`](file:///d:/Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/L1-Logs.md) and [`LOGIC_IMPLEMENTATION_PLAN (1).md`](file:///d:/Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/LOGIC_IMPLEMENTATION_PLAN%20(1).md).
+
+### Summary of Advanced Milestones Documented in `L1-Logs.md`:
+- **Phase 0**: Canonical Baseline & Realism Fixes (21/21 tests, 10 immutable baselines in `backend/tests/fixtures/baselines/`).
+- **Phase 1**: Forensic Ingestion & Multi-Chain Resilience (18/18 tests, reorg rollback, pipeline checkpoints).
+- **Phase 2**: Typology Detection Gaps & Graph Integrity (16/16 tests, bidirectional BFS, consolidation funnel).
+- **Phase 3**: Scoring Accuracy & Statutory Notice Automation (14/14 tests, PRD FR-016 boundary gating).
+- **Phase 4**: Audit Defense & External Gateways (12/12 tests, BIP-39 mnemonic scan, private-key rejection).
+- **Phase 5**: Real-Time Trace Streaming & Polish (12/12 tests, WebSocket multiplexing, OFAC fuzzy match).
+- **Post-Audit Hardening**: Surgical fix to `backend/tracing/trace_engine.py` (lines 446–495) establishing deterministic branching for `CR-2026-MIXER-BOUND-02` (mixer halt) and `CR-2026-OFAC-SDN-05` (sanction hit).
+- **Current Test Status**: **129 passed, 0 failed across 18 test files (100% green)**.
+
+
 

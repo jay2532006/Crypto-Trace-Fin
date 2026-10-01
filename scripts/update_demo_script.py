@@ -1,4 +1,7 @@
-# CryptoTrace LEA — SIH 26183 Live Demonstration Script
+# scripts/update_demo_script.py
+doc_path = "docs/DEMO_SCRIPT.md"
+
+updated_content = """# CryptoTrace LEA — SIH 26183 Live Demonstration Script
 **Smart India Hackathon SIH 26183 | Evaluator Demonstration Protocol**  
 **Version:** 2.1.0-SIH26183  
 **Status:** VERIFIED & HARDENED (129/129 Tests Passing · 10 Golden Baselines)  
@@ -249,3 +252,9 @@ All 10 scenarios correspond to immutable golden snapshots in `backend/tests/fixt
 2. **Nearest-VASP-First**: Identifies the true recipient exchange; excludes downstream internal sweeps.
 3. **No Synthetic Timestamps**: Mule network detection never manufactures 600s timestamps.
 4. **Court-Admissible Defensibility**: Section 65B raw evidence manifests, chained SHA-256 audit logs, and Section 12A PMLA statutory notices.
+"""
+
+with open(doc_path, "w", encoding="utf-8") as f:
+    f.write(updated_content)
+
+print("SUCCESS: DEMO_SCRIPT.md successfully updated!")

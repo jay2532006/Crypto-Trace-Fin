@@ -4,7 +4,7 @@
 ---
 
 ### 1. SYSTEM ARCHITECTURE MAP
-**Status:** PARTIAL (Dual architecture: Legacy Python engine + New Canonical Layer; Next.js 16 decoupled from FastAPI)
+**Status:** COMPLETE (Unified Canonical Architecture; FastAPI + Next.js 16; 129/129 Pytest Tests Passing, 10 Immutable Baselines)
 
 #### Files Involved:
 - `app.py`
@@ -25,7 +25,7 @@ Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/
 ├── requirements.txt                           # Core runtime Python dependencies
 ├── requirements-dev.txt                       # Development and test dependencies (pytest, pytest-asyncio)
 │
-├── backend/                                   # Canonical CryptoTrace LEA Domain Architecture (Phase 1–8)
+├── backend/                                   # Canonical CryptoTrace LEA Domain Architecture (Phase 0–8 + Post-Audit)
 │   ├── adapters/
 │   │   ├── bip39_validator.py                 # Rejects complaints with 12/24-word mnemonics or 64-char hex private keys
 │   │   ├── ncrp_adapter.py                    # National Cybercrime Reporting Portal boundary intake adapter
@@ -38,7 +38,8 @@ Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/
 │   │   ├── evidence_routes.py                 # Forensic payload retrieval, SHA-256 verification, and audit trail
 │   │   ├── intake_routes.py                   # External gateway intake endpoints for NCRP and SAHYOG
 │   │   ├── notice_routes.py                   # Section 91 BNSS legal notice drafting and supervisor approval gate
-│   │   └── trace_routes.py                    # Bounded multi-hop forensic attribution trace trigger
+│   │   ├── trace_routes.py                    # Bounded multi-hop forensic attribution trace trigger
+│   │   └── ws_routes.py                       # WebSocket real-time trace streaming manager
 │   ├── attribution/
 │   │   ├── adaptive_vasp_scorer.py            # Primary 6-step context-sensitive VASP attribution scoring engine
 │   │   ├── attribution_resolver.py            # Resolves highest-confidence VASP candidate from scored clusters
@@ -56,7 +57,8 @@ Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/
 │   │   ├── database.py                        # Authoritative SQLite database manager for cases, transfers, and findings
 │   │   └── intelligence_db.py                 # SQLite store for VASP clusters, mixers, and bridges (intelligence.db)
 │   ├── fixtures/
-│   │   └── demo_cases_v2.py                   # 6 dedicated SIH 26183 evaluation test fixtures
+│   │   ├── demo_cases_v2.py                   # 10 dedicated SIH 26183 evaluation test fixtures
+│   │   └── baselines/                         # 10 canonical immutable baseline snapshots
 │   ├── health/
 │   │   └── provider_health.py                 # Diagnostic latency pings for live RPCs and explorer gateways
 │   ├── ingestion/
@@ -70,19 +72,33 @@ Crypto-Trace-Fin-08ac82779695698a5eab76d43b8a258cfabd9f35/
 │   ├── models/
 │   │   ├── confidence_types.py                # Type definitions for LabelType (VERIFIED/INFERRED) and ConfidenceLevel
 │   │   └── domain_models.py                   # Pydantic schemas for Case, Transfer, PatternFinding, and CrossChainLink
+│   ├── risk/
+│   │   ├── recovery_estimate.py               # FR-016 boundary gated recovery estimator with 72h decay
+│   │   └── risk_assessment.py                 # Multi-factor risk assessor with compounding rules
 │   ├── storage/
 │   │   └── raw_payload_storage.py             # Filesystem SHA-256 content-addressable storage for raw RPC responses
-│   ├── tests/                                 # Pytest test suite covering Phase 1 through Phase 8
-│   │   ├── test_phase1_models.py
+│   ├── tests/                                 # Pytest test suite (18 test files, 129/129 tests passing)
+│   │   ├── test_golden_baseline.py
+│   │   ├── test_phase0.py
+│   │   ├── test_phase0_logic_fixes.py
+│   │   ├── test_phase1.py
+│   │   ├── test_phase1_resilience.py
 │   │   ├── test_phase2_api.py
-│   │   ├── test_phase3_adapters.py
-│   │   ├── test_phase4_audit.py
+│   │   ├── test_phase2_detection_gaps.py
+│   │   ├── test_phase3_accuracy.py
+│   │   ├── test_phase3_live_resilience.py
+│   │   ├── test_phase4_demo_polish.py
+│   │   ├── test_phase4_external_boundaries.py
 │   │   ├── test_phase5_attribution.py
+│   │   ├── test_phase5_polish.py
 │   │   ├── test_phase6_mixer_boundary.py
+│   │   ├── test_phase6_report_pdf.py
 │   │   ├── test_phase7_cross_chain.py
-│   │   └── test_phase8_auth_rbac.py
+│   │   ├── test_phase7_ofac_and_fixtures.py
+│   │   └── test_phase8_intake_api.py
 │   ├── tracing/
 │   │   └── trace_engine.py                    # Core multi-hop BFS traversal, hop limits, and boundary halt engine
+
 │   └── typologies/
 │       ├── mixer_registry.py                  # Registry of Tornado Cash, Railgun, and FixedFloat contracts
 │       ├── typology_engine.py                 # Evaluates FATF rules over completed trace graphs

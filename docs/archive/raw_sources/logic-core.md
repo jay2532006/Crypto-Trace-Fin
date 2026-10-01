@@ -2,6 +2,9 @@
 
 This document provides the exhaustive, code-level technical breakdown of all 12 core algorithms in the CryptoTrace LEA real-time cryptocurrency fraud attribution and tracing platform.
 
+> [!NOTE]
+> **Implementation & Verification Status (October 2026):** All 12 core algorithms specified herein are fully implemented and verified via **129/129 passing pytest tests across 18 test suites** and **10 immutable golden baselines**, including post-audit deterministic DEMO branching (`MIXER_HALT` & `SANCTION_HALT`), FR-016 boundary gating, and chained SHA-256 audit trails.
+
 ---
 
 ### 1. BLOCKCHAIN TRACING ENGINE — HOW IT ACTUALLY WORKS

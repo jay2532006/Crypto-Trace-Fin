@@ -303,7 +303,7 @@ function FindingDetail({ finding, openTransaction }: { finding: PatternFinding; 
       <div>
         <h4 style={{ margin: "12px 0 8px", fontSize: "13px", color: "var(--text-2)" }}>Linked Evidence & Transactions</h4>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          {finding.evidence_references.map((ref) => (
+          {(finding.evidence_references || []).map((ref) => (
             <button
               key={ref}
               onClick={() => openTransaction(ref)}

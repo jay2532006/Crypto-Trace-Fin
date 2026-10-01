@@ -1,6 +1,5 @@
 'use client';
 // @ts-nocheck
-// @ts-nocheck
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -253,6 +252,24 @@ function LegalNoticesContent() {
     setSelectedNotice(updated);
   };
 
+  const handleDownloadCertifiedNotice = async (draftId: string) => {
+    try {
+      const res = await apiClient.get<Blob>(`/api/v1/notices/${encodeURIComponent(draftId)}/download`, {
+        headers: { Accept: 'application/pdf' },
+      });
+      const blob = res.data instanceof Blob ? res.data : new Blob([res.data as any], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Section91_Notice_${draftId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // Backend PDF not yet generated — fallback to browser print
+      window.print();
+    }
+  };
+
   const handleCopyText = () => {
     navigator.clipboard.writeText(selectedNotice.draft_text);
     setCopied(true);
@@ -500,7 +517,7 @@ function LegalNoticesContent() {
                     <div className="flex items-center gap-2">
                       <Button
                         variant="primary"
-                        onClick={() => alert('Dispatched Requisition Package exported.')}
+                        onClick={() => handleDownloadCertifiedNotice(selectedNotice.draft_id)}
                         className="text-xs flex items-center gap-1.5"
                       >
                         <Download className="h-3.5 w-3.5" />

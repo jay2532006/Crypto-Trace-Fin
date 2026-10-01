@@ -214,6 +214,21 @@ def get_analytics_dashboard_endpoint(current_user: Dict[str, Any] = Depends(get_
     }
 
 
+@app.get("/api/v1/intelligence/vasps")
+def get_intelligence_vasps():
+    """Returns the curated VASP registry for frontend intelligence dashboards."""
+    from backend.attribution.vasp_registry import VASP_REGISTRY
+    return {"status": "ok", "vasps": VASP_REGISTRY}
+
+
+@app.get("/api/v1/intelligence/bridges")
+def get_intelligence_bridges():
+    """Returns curated bridge and DEX router registries for cross-chain analysis."""
+    from backend.cross_chain.bridge_registry import BRIDGE_REGISTRY
+    from backend.cross_chain.dex_registry import DEX_REGISTRY
+    return {"status": "ok", "bridges": BRIDGE_REGISTRY, "dex": DEX_REGISTRY}
+
+
 @app.get("/api/config")
 def get_config():
     return {

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import type { ReportView } from "../types";
 import { mockApi } from "../services/mockApi";
+import { apiClient } from "../lib/api-client";
 import { Badge } from "../components/common/Badge";
 import { SkeletonLoader, ErrorNotice } from "../components/common/StateFeedback";
 
@@ -9,6 +10,7 @@ export function ReportsView() {
   const [report, setReport] = useState<ReportView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -25,6 +27,28 @@ export function ReportsView() {
 
     return () => { active = false; };
   }, []);
+
+  const downloadReportPdf = async () => {
+    if (!report?.case?.case_id) return;
+    setDownloadingPdf(true);
+    try {
+      const res = await apiClient.get<Blob>(`/api/v1/cases/${encodeURIComponent(report.case.case_id)}/report.pdf`, {
+        headers: { Accept: "application/pdf" },
+      });
+      const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Forensic_Report_${report.case.case_id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.warn("Direct PDF download fallback to window.print():", err);
+      window.print();
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
 
   const downloadReportJson = () => {
     if (!report) return;
@@ -50,9 +74,12 @@ export function ReportsView() {
         </div>
         <div style={{ display: "flex", gap: "10px" }}>
           <button className="btn-secondary" onClick={() => window.print()}>
-            Print / Save PDF
+            Print Preview
           </button>
-          <button className="btn-primary" onClick={downloadReportJson}>
+          <button className="btn-primary" onClick={downloadReportPdf} disabled={downloadingPdf}>
+            {downloadingPdf ? "Generating PDF..." : "Download Court-Admissible PDF"}
+          </button>
+          <button className="btn-secondary" onClick={downloadReportJson}>
             Export JSON Dossier
           </button>
         </div>
@@ -143,7 +170,7 @@ export function ReportsView() {
           <ul style={{ margin: 0, paddingLeft: "20px", fontSize: "13px", color: "var(--text-2)", lineHeight: "1.7" }}>
             {report.recommendations.map((rec) => (
               <li key={rec.recommendation_id}>
-                <strong>{rec.title}:</strong> {rec.reason}
+                <strong>{rec.title}:</strong> {rec.reason || rec.rationale}
               </li>
             ))}
           </ul>

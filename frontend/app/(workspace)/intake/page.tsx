@@ -54,41 +54,21 @@ export default function IntakePage() {
     setLoading(true);
     setActionMessage(null);
     try {
-      // Login as integration service or pass token
-      const authRes = await fetch("http://localhost:8765/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "admin1", password: "Password@123" }),
-      });
-      const authData = await authRes.json();
-      const token = authData.access_token;
-
       const ack = `NCRP-MHA-${Date.now()}`;
-      const res = await fetch("http://localhost:8765/api/v1/intake/ncrp/complaint", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ncrp_ack_number: ack,
-          chain: "TRON",
-          suspect_wallet: "TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6",
-          reported_amount: 54200.0,
-          complainant_name: "Ramesh K. Verma",
-          complaint_text: "Victim defrauded of 54,200 USDT via fake high-yield crypto investment syndicate.",
-          fir_number: `FIR-${Date.now() % 1000}/CYBER`,
-        }),
+      const res = await apiClient.post("/api/v1/intake/ncrp/complaint", {
+        ncrp_ack_number: ack,
+        chain: "TRON",
+        suspect_wallet: "TYDzsYUEpvnYmQk4zGP9sWWcTEd2MiAtW6",
+        reported_amount: 54200.0,
+        complainant_name: "Ramesh K. Verma",
+        complaint_text: "Victim defrauded of 54,200 USDT via fake high-yield crypto investment syndicate.",
+        fir_number: `FIR-${Date.now() % 1000}/CYBER`,
       });
-      const data = await res.json();
-      if (res.ok) {
-        setActionMessage(`[?] NCRP Complaint Ingested successfully: Case ID ${data.case_id}`);
-        fetchStatusAndQueue();
-      } else {
-        setActionMessage(`[!] Ingestion rejected: ${JSON.stringify(data)}`);
-      }
+      const data = res.data;
+      setActionMessage(`✓ NCRP Complaint Ingested successfully: Case ID ${data?.case_id || ack}`);
+      fetchStatusAndQueue();
     } catch (err: any) {
-      setActionMessage(`[!] Error: ${err.message}`);
+      setActionMessage(`[!] Error: ${err.message || 'Ingestion failed'}`);
     } finally {
       setLoading(false);
     }
@@ -99,41 +79,24 @@ export default function IntakePage() {
     setLoading(true);
     setActionMessage(null);
     try {
-      const authRes = await fetch("http://localhost:8765/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: "admin1", password: "Password@123" }),
+      await apiClient.post("/api/v1/intake/ncrp/complaint", {
+        ncrp_ack_number: `NCRP-BAD-${Date.now()}`,
+        chain: "ETH",
+        suspect_wallet: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+        complaint_text: "Victim stated suspect sent key 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d to access wallet.",
       });
-      const authData = await authRes.json();
-      const token = authData.access_token;
-
-      const res = await fetch("http://localhost:8765/api/v1/intake/ncrp/complaint", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ncrp_ack_number: `NCRP-BAD-${Date.now()}`,
-          chain: "ETH",
-          suspect_wallet: "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-          complaint_text: "Victim stated suspect sent key 0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d to access wallet.",
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        const rejEntry = {
-          id: `REJ-LIVE-${Date.now() % 1000}`,
-          type: "NCRP_COMPLAINT",
-          reason: data.detail?.reason || data.detail || "SECURITY VIOLATION: Private key detected",
-          timestamp: "Just now",
-          snippet: "Victim stated suspect sent key 0x4f3edf983ac636... to access wallet."
-        };
-        setRejections(prev => [rejEntry, ...prev]);
-        setActionMessage("[?] Safeguard Triggered: Payload REJECTED as expected to prevent key leakage into court records!");
-      }
+      setActionMessage("[!] Warning: Payload was unexpectedly accepted without rejection.");
     } catch (err: any) {
-      setActionMessage(`[!] Test error: ${err.message}`);
+      const data = err.response?.data || {};
+      const rejEntry = {
+        id: `REJ-LIVE-${Date.now() % 1000}`,
+        type: "NCRP_COMPLAINT",
+        reason: data.detail?.reason || data.detail || err.message || "SECURITY VIOLATION: Private key detected",
+        timestamp: "Just now",
+        snippet: "Victim stated suspect sent key 0x4f3edf983ac636... to access wallet."
+      };
+      setRejections(prev => [rejEntry, ...prev]);
+      setActionMessage("✓ Safeguard Triggered: Payload REJECTED as expected to prevent key leakage into court records!");
     } finally {
       setLoading(false);
     }

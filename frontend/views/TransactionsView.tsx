@@ -56,7 +56,7 @@ export function TransactionsView({ openTransaction }: TransactionsViewProps) {
       <div className="toolbar-panel">
         <div className="toolbar">
           <select className="form-select" value={chain} onChange={(e) => setChain(e.target.value as Chain | "all")} aria-label="Filter transactions by chain">
-            <option value="all">All Chains</option><option value="ethereum">Ethereum</option><option value="polygon">Polygon</option><option value="tron">Tron</option><option value="bitcoin">Bitcoin</option>
+            <option value="all">All Chains</option><option value="ethereum">Ethereum</option><option value="polygon">Polygon</option><option value="tron">Tron</option><option value="bitcoin">Bitcoin</option><option value="bsc">BNB Chain</option>
           </select>
           <input className="form-input transaction-search" placeholder="Filter by hash, address, or provider RPC..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Filter transactions" />
         </div>

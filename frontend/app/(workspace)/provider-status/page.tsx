@@ -49,6 +49,18 @@ const INITIAL_PROVIDERS: ProviderStatusItem[] = [
     circuit_breaker_active: false,
   },
   {
+    id: 'bsc-mainnet',
+    name: 'BNB Smart Chain Gateway (BscScan / Ankr RPC)',
+    chain: 'BSC',
+    type: 'EVM Layer-1',
+    endpoint: 'https://rpc.ankr.com/bsc',
+    operational: true,
+    status: 'ONLINE',
+    latency_ms: 95,
+    last_checked: new Date().toISOString(),
+    circuit_breaker_active: false,
+  },
+  {
     id: 'btc-esplora',
     name: 'Bitcoin Core / Blockstream Esplora',
     chain: 'BTC',
@@ -125,6 +137,7 @@ export default function ProviderStatusPage() {
         prev.map((p) => {
           let testRes: any = null;
           if (p.id === 'eth-mainnet' || p.chain === 'ETH') testRes = apiResults.etherscan;
+          else if (p.id === 'bsc-mainnet' || p.chain === 'BSC') testRes = apiResults.bitquery || apiResults.etherscan;
           else if (p.id === 'btc-esplora' || p.chain === 'BTC') testRes = apiResults.esplora;
           else if (p.id === 'tron-grid' || p.chain === 'TRON') testRes = apiResults.trongrid;
           else if (p.id === 'polygon-pos' || p.chain === 'POLYGON') testRes = apiResults.bitquery;

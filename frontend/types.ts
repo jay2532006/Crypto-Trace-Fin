@@ -1,5 +1,5 @@
 export type ExecutionMode = "FIXTURE_REPLAY" | "LIVE";
-export type Chain = "ethereum" | "polygon" | "tron" | "bitcoin";
+export type Chain = "ethereum" | "polygon" | "tron" | "bitcoin" | "bsc";
 export type SourceType = "NCRP_INTAKE" | "SAHYOG" | "MANUAL";
 export type LabelStatus = "VERIFIED" | "INFERRED" | "UNRESOLVED" | "LABELLED";
 export type Coverage = "COMPLETE" | "PARTIAL";
@@ -28,20 +28,34 @@ export interface Case {
   state: string;
   primary_chain: Chain;
   reported_wallet: string;
-  wallet_type: string;
-  data_coverage: Coverage;
-  created_at: string;
-  last_updated_at: string;
+  // Optional — not always available from live backend
+  wallet_type?: string;
+  data_coverage?: Coverage;
+  created_at?: string;
+  last_updated_at?: string;
 }
 
 export interface Wallet {
-  id: string;
+  id?: string;
   address: string;
   chain: Chain;
-  type: string;
-  status: string;
-  risk_tier: string;
-  coverage: Coverage;
+  // Classification fields (from fixture or normalized live)
+  type?: string;
+  status?: string;
+  risk_tier?: string;
+  coverage?: Coverage;
+  // Live-backend balance fields
+  balance?: number;
+  balance_usd?: number;
+  balance_inr?: number;
+  first_seen?: string;
+  last_active?: string;
+  total_received?: number;
+  total_sent?: number;
+  tx_count?: number;
+  risk_score?: number;
+  risk_category?: string;
+  entity_type?: string;
 }
 
 export interface Transaction {
@@ -102,14 +116,35 @@ export interface GraphEdge {
 
 export interface TraceResult {
   trace_id: string;
-  root_wallet: string;
+  // Root address (either field name may appear)
+  root_wallet?: string;
+  start_wallet?: string;
+  // Case linkage
+  case_id?: string;
+  // Execution metadata
+  execution_timestamp?: string;
+  status?: string;
+  // Graph dimensions
   node_count: number;
   edge_count: number;
   max_depth_reached: number;
+  total_hops?: number;
+  // Value totals
+  total_volume_usd?: number;
+  total_volume_inr?: number;
+  // Attribution
+  destination_vasp?: string;
+  recovery_potential?: string;
+  // Termination context
   termination_reason: string;
   coverage: Coverage;
+  partial_result?: boolean;
+  data_completeness_pct?: number;
+  earliest_transaction_date?: string;
+  time_window_truncations?: number;
+  ofac_sanction_hit?: boolean;
   limits: TraceLimits;
-  paths: string[][];
+  paths?: string[][];
 }
 
 export interface TraceLimits {
@@ -150,7 +185,18 @@ export interface VASPCluster {
   confidence_band: string;
   hop_distance: number;
   evidence_references: string[];
-  ownership_proof: false;
+  ownership_proof: boolean;
+  // Extended fields from live backend
+  vasp_id?: string;
+  vasp_name?: string;
+  hot_wallet?: string;
+  jurisdiction?: string;
+  confidence_score?: number;
+  is_fiu_registered?: boolean;
+  fiu_ind_registration_no?: string;
+  compliance_contact?: string;
+  total_deposit_volume_inr?: number;
+  chains_supported?: string[];
 }
 
 export interface AttributionAssessment {
@@ -207,10 +253,15 @@ export interface RecoveryEstimate {
 export interface InvestigativeRecommendation {
   recommendation_id: string;
   priority: string;
+  action_type?: string;
   title: string;
-  reason: string;
-  evidence_references: string[];
-  uncertainty: string;
+  // Accept both field names — fixture uses `rationale`, type used `reason`
+  reason?: string;
+  rationale?: string;
+  target_entity?: string;
+  suggested_deadline?: string;
+  evidence_references?: string[];
+  uncertainty?: string;
 }
 
 export interface EvidenceItem {
@@ -263,9 +314,12 @@ export interface PreservationRequest {
 }
 
 export interface SystemStatus {
-  execution_mode: ExecutionMode;
-  chains: Record<Chain, { status: string; last_block: number }>;
+  execution_mode?: ExecutionMode;
+  api_gateway_status?: string;
+  chains: Record<string, { status: string; last_block: number; latency_ms?: number }>;
   pipeline: Record<string, string>;
+  sanctions_lists?: Record<string, { status: string; last_updated: string }>;
+  last_probe_timestamp?: string;
 }
 
 export interface ReportView {

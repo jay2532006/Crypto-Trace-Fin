@@ -37,14 +37,14 @@ export function AlertsView({ onNavigate }: AlertsViewProps) {
     <div className="view-stack alerts-view">
       <div className="page-heading">
         <div><h1>Alert Triage</h1><p>Review typology detections and rapid fund-movement flags requiring investigator attention.</p></div>
-        <Badge tone="red">{alerts.filter((alert) => alert.severity === "HIGH").length} Critical Alerts</Badge>
+        <Badge tone="red">{alerts.filter((alert) => alert.severity === "HIGH" || alert.severity === "CRITICAL").length} Critical Alerts</Badge>
       </div>
 
       <section className="kestrel-panel">
         <div className="kestrel-panel-head">
           <div><h2>Alert Register</h2><p>Select an alert to open its active investigation context.</p></div>
           <div className="segmented" aria-label="Filter alerts by severity">
-            {["ALL", "HIGH", "MEDIUM", "LOW"].map((severity) => <button key={severity} type="button" className={severityFilter === severity ? "selected" : ""} onClick={() => setSeverityFilter(severity)}>{severity}</button>)}
+            {["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"].map((severity) => <button key={severity} type="button" className={severityFilter === severity ? "selected" : ""} onClick={() => setSeverityFilter(severity)}>{severity}</button>)}
           </div>
         </div>
 
@@ -52,7 +52,7 @@ export function AlertsView({ onNavigate }: AlertsViewProps) {
           <div className="table-head grid-alert"><span>Severity</span><span>Alert Type</span><span>Linked Case</span><span>Target Wallet</span><span>Status</span></div>
           {filtered.length === 0 ? <EmptyState title="No alerts match this severity" description="Choose another severity filter to restore the register." actionLabel="Show all alerts" onAction={() => setSeverityFilter("ALL")} /> : filtered.map((alert) => (
             <button key={alert.alert_id} className="table-row grid-alert" onClick={() => onNavigate("investigations")}>
-              <Badge tone={alert.severity === "HIGH" ? "red" : alert.severity === "MEDIUM" ? "amber" : "neutral"}>{alert.severity}</Badge>
+              <Badge tone={alert.severity === "CRITICAL" || alert.severity === "HIGH" ? "red" : alert.severity === "MEDIUM" ? "amber" : "neutral"}>{alert.severity}</Badge>
               <strong>{alert.type.replace(/_/g, " ")}</strong>
               <span className="mono table-muted">{alert.case_id}</span>
               <span className="mono text-accent">{formatWallet(alert.wallet)}</span>

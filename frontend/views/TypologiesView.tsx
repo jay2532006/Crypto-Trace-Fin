@@ -98,7 +98,7 @@ export function TypologiesView({ setDrawer, openTransaction }: TypologiesViewPro
                 Supporting Evidence References
               </span>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                {finding.evidence_references.map((ref) => (
+                {(finding.evidence_references || []).map((ref) => (
                   <button
                     key={ref}
                     onClick={() => openTransaction(ref)}

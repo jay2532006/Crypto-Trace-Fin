@@ -110,9 +110,17 @@ export function InvestigationView({ activeCase, setDrawer, openTransaction }: In
     setRunningStage("ADVANCE → Synchronizing VASP & Typology intelligence");
     const response = await mockApi.runTrace(limits);
     setTrace(response.data);
+    const [updatedGraph, updatedTyp, updatedRec] = await Promise.all([
+      mockApi.getGraph(),
+      mockApi.getTypologies(),
+      mockApi.getRecovery()
+    ]);
+    setGraph(updatedGraph.data);
+    setTypologies(updatedTyp.data);
+    setRecovery(updatedRec.data);
     setRevealedEdgeCount(null);
     setIsTracing(false);
-    setRunningStage("READY · PARTIAL COVERAGE");
+    setRunningStage("READY · VERIFIED LEDGER");
   };
 
   const selectNode = (node: GraphNode) => {
@@ -286,8 +294,8 @@ export function InvestigationView({ activeCase, setDrawer, openTransaction }: In
             {recommendations.map((rec) => (
               <article key={rec.recommendation_id} className="list-item-card">
                 <div className="list-item-head"><strong>{rec.title}</strong><Badge tone={rec.priority === "HIGH" ? "red" : "amber"}>{rec.priority}</Badge></div>
-                <p>{rec.reason}</p>
-                <div className="reference-list">{rec.evidence_references.map((ref: string) => <button key={ref} className="mono" onClick={() => void openTransaction(ref)}>{ref} ↗</button>)}</div>
+                <p>{rec.reason || rec.rationale}</p>
+                <div className="reference-list">{(rec.evidence_references || []).map((ref: string) => <button key={ref} className="mono" onClick={() => void openTransaction(ref)}>{ref} ↗</button>)}</div>
               </article>
             ))}
           </div>

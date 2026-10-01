@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Info,
   ChevronRight,
+  ArrowRight,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -495,6 +496,25 @@ function AttributionContent() {
               </table>
             </CardContent>
           </Card>
+
+          {/* Action Callout: Issue Section 91 Notice */}
+          <div className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-xl border border-blue-500/40 bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/60 gap-4">
+            <div>
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-400" />
+                Statutory Action: Issue Section 91 BNSS Requisition
+              </h4>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Draft legal preservation notice and production order pre-filled with {selectedVasp.name} ({selectedVasp.legal_name}) compliance details.
+              </p>
+            </div>
+            <Button
+              className="bg-blue-600 hover:bg-blue-500 text-white shrink-0 text-xs flex items-center gap-1.5"
+              onClick={() => router.push(`/legal-notices?vasp=${encodeURIComponent(selectedVasp.name)}`)}
+            >
+              Draft Preservation Notice <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

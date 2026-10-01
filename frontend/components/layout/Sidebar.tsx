@@ -13,7 +13,15 @@ export type Route =
   | "evidence"
   | "reports"
   | "supervisor"
-  | "system";
+  | "system"
+  | "system-status"
+  | "intake"
+  | "demo"
+  | "attribution"
+  | "recovery"
+  | "legal-notices"
+  | "audit"
+  | "provider-status";
 
 interface SidebarProps {
   currentRoute: Route;
@@ -48,7 +56,9 @@ export function Sidebar({
       items: [
         { id: "overview", label: "Overview", icon: <HomeIcon /> },
         { id: "cases", label: "Cases", icon: <CasesIcon /> },
-        { id: "alerts", label: "Alerts", icon: <AlertIcon />, counter: openAlertsCount, isAlert: true }
+        { id: "intake", label: "NCRP Gateway", icon: <DocumentIcon /> },
+        { id: "alerts", label: "Alerts", icon: <AlertIcon />, counter: openAlertsCount, isAlert: true },
+        { id: "demo", label: "Guided Demo", icon: <SearchIcon /> },
       ]
     },
     {
@@ -58,17 +68,22 @@ export function Sidebar({
         { id: "transactions", label: "Transactions", icon: <TransferIcon /> },
         { id: "wallets", label: "Wallets", icon: <WalletIcon /> },
         { id: "typologies", label: "Typologies", icon: <LayersIcon /> },
-        { id: "vasp", label: "VASP Intelligence", icon: <VaspIcon /> },
-        { id: "cross-chain", label: "Cross-Chain", icon: <CrossChainIcon /> }
+        { id: "vasp", label: "VASP Clusters", icon: <VaspIcon /> },
+        { id: "attribution", label: "VASP Attribution", icon: <VaspIcon /> },
+        { id: "cross-chain", label: "Cross-Chain", icon: <CrossChainIcon /> },
+        { id: "recovery", label: "Recovery Matrix", icon: <LayersIcon /> },
       ]
     },
     {
-      label: "Record",
+      label: "Record & Legal",
       items: [
-        { id: "evidence", label: "Evidence", icon: <DocumentIcon /> },
-        { id: "reports", label: "Reports", icon: <ReportIcon /> },
-        { id: "supervisor", label: "Supervisor", icon: <UserIcon /> },
-        { id: "system", label: "System Status", icon: <SettingsIcon /> }
+        { id: "legal-notices", label: "Section 91 Notices", icon: <DocumentIcon /> },
+        { id: "evidence", label: "Evidence Manifest", icon: <DocumentIcon /> },
+        { id: "reports", label: "Dossier Reports", icon: <ReportIcon /> },
+        { id: "supervisor", label: "Supervisor Queue", icon: <UserIcon /> },
+        { id: "audit", label: "Chained Audit", icon: <DocumentIcon /> },
+        { id: "system-status", label: "System Health", icon: <SettingsIcon /> },
+        { id: "provider-status", label: "Gateway Status", icon: <SettingsIcon /> },
       ]
     }
   ];

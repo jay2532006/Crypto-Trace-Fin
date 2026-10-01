@@ -24,16 +24,12 @@ export function CopilotPanel({ caseId, traceData }: CopilotPanelProps) {
   const fetchRecommendations = React.useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8765/api/v1/copilot/${caseId}/recommend`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setRecommendations(data.recommendations);
-        setProvider(data.provider);
-        setModel(data.model);
-        setGuardrail(data.guardrail);
+      const res = await apiClient.post(`/api/v1/copilot/${encodeURIComponent(caseId)}/recommend`);
+      if (res.data) {
+        setRecommendations(res.data.recommendations);
+        setProvider(res.data.provider || "Rule-Based Fallback");
+        setModel(res.data.model || "Deterministic Engine");
+        setGuardrail(res.data.guardrail);
       }
     } catch (e) {
       setProvider("Rule-Based Fallback");
@@ -59,16 +55,14 @@ export function CopilotPanel({ caseId, traceData }: CopilotPanelProps) {
     setLoading(true);
 
     try {
-      const res = await fetch(`http://localhost:8765/api/v1/copilot/${caseId}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userText, trace_data: traceData }),
+      const res = await apiClient.post(`/api/v1/copilot/${encodeURIComponent(caseId)}/chat`, {
+        query: userText,
+        trace_data: traceData,
       });
-      if (res.ok) {
-        const data = await res.json();
+      if (res.data) {
         setChatLog((prev) => [
           ...prev,
-          { role: "copilot", text: data.response, provider: data.provider },
+          { role: "copilot", text: res.data.response, provider: res.data.provider },
         ]);
       }
     } catch (err) {

@@ -70,3 +70,13 @@ def execute_trace(request: Request, req: BoundedTraceRequest, current_user: Dict
     )
 
     return result
+
+
+@router.get("/vasps/geo")
+def get_vasp_geo(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    §Phase5: Returns registered VASP geographic coordinates and FIU compliance metadata
+    for jurisdiction map overlays.
+    """
+    from backend.attribution.vasp_registry import get_vasp_geo_summary
+    return get_vasp_geo_summary()

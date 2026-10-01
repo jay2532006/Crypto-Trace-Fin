@@ -1,0 +1,298 @@
+{
+  "case_id": "DEMO-SIH26182-003",
+  "hops": [
+    {
+      "hop_number": 1,
+      "from_address": "0x12D66f87A04A9E220743712cE6d9bB1B5616B8Fc",
+      "to_address": "0x71c8fb9284285741829e05e55099e0344d9f1091",
+      "amount": 50000.0,
+      "asset": "USDT",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_tx_hash_1",
+      "timestamp_epoch": 1790816834,
+      "type": "suspect",
+      "amount_usd": 50000.0,
+      "amount_inr": 4175000.0
+    },
+    {
+      "hop_number": 2,
+      "from_address": "0x71c8fb9284285741829e05e55099e0344d9f1091",
+      "to_address": "0x81c8fb9284285741829e05e55099e0344d9f1092",
+      "amount": 49000.0,
+      "asset": "USDT",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_tx_hash_2",
+      "timestamp_epoch": 1790820434,
+      "type": "intermediary",
+      "amount_usd": 49000.0,
+      "amount_inr": 4091500.0
+    },
+    {
+      "hop_number": 3,
+      "from_address": "0x81c8fb9284285741829e05e55099e0344d9f1092",
+      "to_address": "0x91d9ef53912185741829e05e55099e0344d9f1093",
+      "amount": 48020.0,
+      "asset": "USDT",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_tx_hash_3",
+      "timestamp_epoch": 1790824034,
+      "type": "intermediary",
+      "amount_usd": 48020.0,
+      "amount_inr": 4009670.0
+    },
+    {
+      "hop_number": 4,
+      "from_address": "0x91d9ef53912185741829e05e55099e0344d9f1093",
+      "to_address": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "amount": 47059.6,
+      "asset": "USDT",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_tx_hash_4",
+      "timestamp_epoch": 1790827634,
+      "type": "vasp",
+      "amount_usd": 47059.6,
+      "amount_inr": 3929476.6
+    }
+  ],
+  "attribution": {
+    "vasp_name": "Binance Holdings Ltd",
+    "vasp_id": "VASP-GLOBAL-001",
+    "score": 83,
+    "score_components": {
+      "a_jurisdiction": 0.08,
+      "b_hop_decay": -0.2,
+      "c_hot_wallet_match": 0.35,
+      "d_mixer_penalty": 0.0,
+      "e_recent_activity": 0.1
+    },
+    "policy_version": "policy_v1_india_kyc",
+    "scoring_steps": [
+      {
+        "step_name": "1_load_policy",
+        "input_value": "policy_v1_india_kyc",
+        "weight": 0.5,
+        "output_contribution": 25.0,
+        "reasoning": "Loaded active jurisdiction policy: policy_v1_india_kyc"
+      },
+      {
+        "step_name": "2_single_hop_override",
+        "input_value": false,
+        "weight": 0.0,
+        "output_contribution": 0.0,
+        "reasoning": "Multi-hop path (4 hops) requires intermediary clustering."
+      },
+      {
+        "step_name": "3a_exchange_jurisdiction",
+        "input_value": "GLOBAL",
+        "weight": 0.08,
+        "output_contribution": 8.0,
+        "reasoning": "FIU-IND Status: REGISTERED. Higher certainty for domestic reporting entities."
+      },
+      {
+        "step_name": "3b_hop_decay",
+        "input_value": 4,
+        "weight": -0.2,
+        "output_contribution": -20.0,
+        "reasoning": "Hop distance 4 applies mathematical confidence decay (capped at -0.20)."
+      },
+      {
+        "step_name": "3c_hot_wallet_match",
+        "input_value": "EXACT",
+        "weight": 0.35,
+        "output_contribution": 35.0,
+        "reasoning": "Exact hot-wallet address match vs heuristic cluster match."
+      },
+      {
+        "step_name": "3d_mixer_penalty",
+        "input_value": false,
+        "weight": 0.0,
+        "output_contribution": 0.0,
+        "reasoning": "No mixer interaction detected along trace corridor."
+      },
+      {
+        "step_name": "3e_recent_activity",
+        "input_value": "2 days ago",
+        "weight": 0.1,
+        "output_contribution": 10.0,
+        "reasoning": "Active wallet interaction within the last 7 days indicates active off-ramp cluster."
+      }
+    ],
+    "label_type": "INFERRED",
+    "confidence_band": "MEDIUM",
+    "nodal_officer_email": "lea-india@binance.com",
+    "fiu_status": "REGISTERED",
+    "nearest_vasp_hop": 4,
+    "ranked_candidates": [
+      {
+        "vasp_name": "Zanmai Labs Pvt Ltd (WazirX)",
+        "vasp_id": "VASP-IND-001",
+        "score": 90,
+        "score_components": {
+          "a_jurisdiction": 0.15,
+          "b_hop_decay": -0.2,
+          "c_hot_wallet_match": 0.35,
+          "d_mixer_penalty": 0.0,
+          "e_recent_activity": 0.1
+        },
+        "policy_version": "policy_v1_india_kyc",
+        "scoring_steps": [
+          {
+            "step_name": "1_load_policy",
+            "input_value": "policy_v1_india_kyc",
+            "weight": 0.5,
+            "output_contribution": 25.0,
+            "reasoning": "Loaded active jurisdiction policy: policy_v1_india_kyc"
+          },
+          {
+            "step_name": "2_single_hop_override",
+            "input_value": false,
+            "weight": 0.0,
+            "output_contribution": 0.0,
+            "reasoning": "Multi-hop path (4 hops) requires intermediary clustering."
+          },
+          {
+            "step_name": "3a_exchange_jurisdiction",
+            "input_value": "INDIA",
+            "weight": 0.15,
+            "output_contribution": 15.0,
+            "reasoning": "FIU-IND Status: REGISTERED. Higher certainty for domestic reporting entities."
+          },
+          {
+            "step_name": "3b_hop_decay",
+            "input_value": 4,
+            "weight": -0.2,
+            "output_contribution": -20.0,
+            "reasoning": "Hop distance 4 applies mathematical confidence decay (capped at -0.20)."
+          },
+          {
+            "step_name": "3c_hot_wallet_match",
+            "input_value": "EXACT",
+            "weight": 0.35,
+            "output_contribution": 35.0,
+            "reasoning": "Exact hot-wallet address match vs heuristic cluster match."
+          },
+          {
+            "step_name": "3d_mixer_penalty",
+            "input_value": false,
+            "weight": 0.0,
+            "output_contribution": 0.0,
+            "reasoning": "No mixer interaction detected along trace corridor."
+          },
+          {
+            "step_name": "3e_recent_activity",
+            "input_value": "2 days ago",
+            "weight": 0.1,
+            "output_contribution": 10.0,
+            "reasoning": "Active wallet interaction within the last 7 days indicates active off-ramp cluster."
+          }
+        ],
+        "label_type": "INFERRED",
+        "confidence_band": "MEDIUM",
+        "nodal_officer_email": "nodal@wazirx.com",
+        "fiu_status": "REGISTERED"
+      },
+      {
+        "vasp_name": "Binance Holdings Ltd",
+        "vasp_id": "VASP-GLOBAL-001",
+        "score": 83,
+        "score_components": {
+          "a_jurisdiction": 0.08,
+          "b_hop_decay": -0.2,
+          "c_hot_wallet_match": 0.35,
+          "d_mixer_penalty": 0.0,
+          "e_recent_activity": 0.1
+        },
+        "policy_version": "policy_v1_india_kyc",
+        "scoring_steps": [
+          {
+            "step_name": "1_load_policy",
+            "input_value": "policy_v1_india_kyc",
+            "weight": 0.5,
+            "output_contribution": 25.0,
+            "reasoning": "Loaded active jurisdiction policy: policy_v1_india_kyc"
+          },
+          {
+            "step_name": "2_single_hop_override",
+            "input_value": false,
+            "weight": 0.0,
+            "output_contribution": 0.0,
+            "reasoning": "Multi-hop path (4 hops) requires intermediary clustering."
+          },
+          {
+            "step_name": "3a_exchange_jurisdiction",
+            "input_value": "GLOBAL",
+            "weight": 0.08,
+            "output_contribution": 8.0,
+            "reasoning": "FIU-IND Status: REGISTERED. Higher certainty for domestic reporting entities."
+          },
+          {
+            "step_name": "3b_hop_decay",
+            "input_value": 4,
+            "weight": -0.2,
+            "output_contribution": -20.0,
+            "reasoning": "Hop distance 4 applies mathematical confidence decay (capped at -0.20)."
+          },
+          {
+            "step_name": "3c_hot_wallet_match",
+            "input_value": "EXACT",
+            "weight": 0.35,
+            "output_contribution": 35.0,
+            "reasoning": "Exact hot-wallet address match vs heuristic cluster match."
+          },
+          {
+            "step_name": "3d_mixer_penalty",
+            "input_value": false,
+            "weight": 0.0,
+            "output_contribution": 0.0,
+            "reasoning": "No mixer interaction detected along trace corridor."
+          },
+          {
+            "step_name": "3e_recent_activity",
+            "input_value": "2 days ago",
+            "weight": 0.1,
+            "output_contribution": 10.0,
+            "reasoning": "Active wallet interaction within the last 7 days indicates active off-ramp cluster."
+          }
+        ],
+        "label_type": "INFERRED",
+        "confidence_band": "MEDIUM",
+        "nodal_officer_email": "lea-india@binance.com",
+        "fiu_status": "REGISTERED"
+      }
+    ]
+  },
+  "typologies": [
+    "MULE_NETWORK",
+    "PEEL_CHAIN",
+    "RAPID_HOP"
+  ],
+  "risk": {
+    "case_id": "DEMO-SIH26182-003",
+    "risk_score": 75,
+    "risk_category": "CRITICAL",
+    "component_scores": {
+      "ofac_sanctions": 0,
+      "mixer_interaction": 0,
+      "mule_network": 20,
+      "peel_chain": 15,
+      "consolidation_funnel": 0,
+      "hop_velocity": 10,
+      "fraud_amount": 15,
+      "cross_chain_layering": 0,
+      "offshore_vasp_penalty": 0,
+      "compound_mule_rapid": 15,
+      "compound_mule_mixer": 0
+    }
+  },
+  "recovery_estimate": {
+    "case_id": "DEMO-SIH26182-003",
+    "recovery_score": 75,
+    "action_window_hours": 33,
+    "display_tier": "eligible",
+    "calculation_basis": "Eligible Case: Traced $50,000.00 USD (4 hops). VASP Cooperation Factor: 35/35. Time Urgency Factor: 30/30 (3.0h elapsed). Path Simplicity: 5/25.",
+    "disclaimer": "Heuristic Recovery Estimate is an operational urgency indicator based on path complexity, elapsed time, and exchange cooperation. It is not a statistical probability or legal guarantee."
+  },
+  "boundary_events": [],
+  "data_completeness_pct": 100.0,
+  "termination_reason": "MAX_HOPS"
+}

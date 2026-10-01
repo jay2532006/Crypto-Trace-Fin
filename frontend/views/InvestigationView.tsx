@@ -151,6 +151,10 @@ export function InvestigationView({ activeCase, setDrawer, openTransaction }: In
         risk={risk}
         attributionBand={vasps[0]?.confidence_band || "HIGH"}
         traceCoverage={trace?.coverage || "PARTIAL"}
+        dataCompletenessPct={(trace as any)?.data_completeness_pct}
+        earliestTransactionDate={(trace as any)?.earliest_transaction_date}
+        timeWindowTruncations={(trace as any)?.time_window_truncations ?? 0}
+        partialResult={(trace as any)?.partial_result ?? false}
       />
 
       <RapidFlowStrip
@@ -191,6 +195,28 @@ export function InvestigationView({ activeCase, setDrawer, openTransaction }: In
                   <div className="metric-line"><span>Max Depth</span><strong>{trace.max_depth_reached} hops</strong></div>
                   <div className="metric-line"><span>Termination</span><Badge tone="amber">{trace.termination_reason}</Badge></div>
                   <div className="metric-line"><span>Coverage</span><Badge tone="partial">{trace.coverage}</Badge></div>
+                  {(trace as any)?.data_completeness_pct !== undefined && (
+                    <div className="metric-line" title={`We confirmed ${Math.round((trace as any).data_completeness_pct)}% of the fund flow from public blockchain data.`}>
+                      <span>Data Completeness</span>
+                      <strong style={{
+                        color: (trace as any).data_completeness_pct >= 85 ? "var(--green, #22c55e)" :
+                               (trace as any).data_completeness_pct >= 65 ? "var(--amber, #f59e0b)" : "var(--red, #ef4444)"
+                      }}>
+                        {Math.round((trace as any).data_completeness_pct)}%
+                      </strong>
+                    </div>
+                  )}
+                  {(trace as any)?.ui_warning_banner && (
+                    <div className="metric-line" style={{ color: "var(--amber, #f59e0b)", fontSize: "0.78rem", marginTop: "4px" }}>
+                      ⚠ {(trace as any).ui_warning_banner}
+                    </div>
+                  )}
+                  {(trace as any)?.earliest_transaction_date && (
+                    <div className="metric-line">
+                      <span>Data Horizon</span>
+                      <span className="mono" style={{ fontSize: "0.78rem" }}>{(trace as any).earliest_transaction_date}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

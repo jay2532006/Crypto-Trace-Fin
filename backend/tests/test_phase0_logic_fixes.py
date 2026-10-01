@@ -384,5 +384,76 @@ class TestIntakeRoleAcceptance(unittest.TestCase):
         self.assertNotIn("GUEST", _INTAKE_ALLOWED_ROLES)
 
 
+# ---------------------------------------------------------------------------
+# §Task 2 & 3 — DEMO Integration Tests & Post-Phase-0 Baseline Verification
+# ---------------------------------------------------------------------------
+class TestPhase0DemoIntegration(unittest.TestCase):
+    """
+    End-to-end trace pipeline tests confirming:
+    1. Mixer boundary cases terminate at mixer without resolving to exchange
+    2. OFAC sanctioned cases halt at sanctioned address without routing to exchange
+    3. All 10 post-Phase-0 baseline snapshots exist and contain all required keys
+    """
+
+    def test_mixer_case_terminates_at_mixer_not_exchange(self):
+        from backend.tracing.trace_engine import bounded_tracer
+        result = bounded_tracer.trace(case_id="CR-2026-MIXER-BOUND-02", mode="DEMO")
+        self.assertIn("MIXER_BOUNDARY", result["typologies"])
+        self.assertEqual(result["attribution"]["label_type"], "UNRESOLVED")
+        self.assertIsNone(result["attribution"]["vasp_name"])
+        self.assertGreaterEqual(
+            len([e for e in result["boundary_events"] if e.get("type") == "MIXER_BOUNDARY"]), 1
+        )
+        self.assertNotEqual(result["attribution"]["vasp_key"], "WAZIRX")
+        self.assertNotEqual(result["attribution"]["vasp_key"], "BINANCE")
+
+    def test_ofac_case_terminates_at_sanctioned_address_not_exchange(self):
+        from backend.tracing.trace_engine import bounded_tracer
+        result = bounded_tracer.trace(case_id="CR-2026-OFAC-SDN-05", mode="DEMO")
+        self.assertTrue(result["ofac_sanction_hit"])
+        self.assertEqual(result["attribution"]["label_type"], "UNRESOLVED")
+        self.assertEqual(result["risk"]["risk_category"], "CRITICAL")
+        self.assertNotEqual(result["attribution"]["vasp_key"], "WAZIRX")
+        self.assertNotEqual(result["attribution"]["vasp_key"], "BINANCE")
+        self.assertLessEqual(len(result["hops"]), 2)
+
+    def test_baseline_snapshots_exist_and_are_complete(self):
+        import json
+        cases = [
+            "CR-2026-MULE-IND-01",
+            "CR-2026-MIXER-BOUND-02",
+            "CR-2026-BRIDGE-XCHAIN-03",
+            "CR-2026-BRIDGE-XCHAIN-04",
+            "CR-2026-OFAC-SDN-05",
+            "CR-2026-MULE-FANIN-06",
+            "DEMO-SIH26182-001",
+            "DEMO-SIH26182-002",
+            "DEMO-SIH26182-003",
+            "DEMO-SIH26182-004",
+        ]
+        required_keys = [
+            "case_id",
+            "hops",
+            "attribution",
+            "typologies",
+            "risk",
+            "recovery_estimate",
+            "boundary_events",
+            "data_completeness_pct",
+            "termination_reason",
+        ]
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        baselines_dir = os.path.join(base_dir, "fixtures", "baselines")
+        self.assertTrue(os.path.isdir(baselines_dir), f"Directory {baselines_dir} does not exist")
+
+        for cid in cases:
+            file_path = os.path.join(baselines_dir, f"{cid}_baseline.json")
+            self.assertTrue(os.path.isfile(file_path), f"Baseline file {file_path} missing")
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for key in required_keys:
+                self.assertIn(key, data, f"Key '{key}' missing in {file_path}")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

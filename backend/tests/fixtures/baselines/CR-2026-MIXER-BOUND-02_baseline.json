@@ -1,0 +1,151 @@
+{
+  "case_id": "CR-2026-MIXER-BOUND-02",
+  "hops": [
+    {
+      "hop_number": 1,
+      "from_address": "0x1da5821544e25c636c1417ba96ade4cf6d2f9b5a",
+      "to_address": "0x85bc484b3e5b306fc6e232ef1907cb38fae1f736",
+      "amount": 30.0,
+      "asset": "ETH",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_mixer_tx_1",
+      "timestamp_epoch": 1790820434,
+      "type": "intermediary",
+      "node_type": "intermediary",
+      "amount_usd": 30.0,
+      "amount_inr": 2505.0
+    },
+    {
+      "hop_number": 2,
+      "from_address": "0x85bc484b3e5b306fc6e232ef1907cb38fae1f736",
+      "to_address": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "amount": 29.8,
+      "asset": "ETH",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_mixer_tx_2",
+      "timestamp_epoch": 1790824034,
+      "type": "mixer_input",
+      "node_type": "mixer_input",
+      "edge_type": "MIXER_BOUNDARY",
+      "is_mixer": true,
+      "amount_usd": 29.8,
+      "amount_inr": 2488.3
+    }
+  ],
+  "attribution": {
+    "vasp_name": null,
+    "vasp_id": "VASP-UNKNOWN",
+    "score": 37,
+    "score_components": {
+      "a_jurisdiction": 0.0,
+      "b_hop_decay": -0.08,
+      "c_hot_wallet_match": 0.15,
+      "d_mixer_penalty": -0.3,
+      "e_recent_activity": 0.1
+    },
+    "policy_version": "policy_v1_india_kyc",
+    "scoring_steps": [
+      {
+        "step_name": "1_load_policy",
+        "input_value": "policy_v1_india_kyc",
+        "weight": 0.5,
+        "output_contribution": 25.0,
+        "reasoning": "Loaded active jurisdiction policy: policy_v1_india_kyc"
+      },
+      {
+        "step_name": "2_single_hop_override",
+        "input_value": false,
+        "weight": 0.0,
+        "output_contribution": 0.0,
+        "reasoning": "Multi-hop path (2 hops) requires intermediary clustering."
+      },
+      {
+        "step_name": "3a_exchange_jurisdiction",
+        "input_value": "UNKNOWN",
+        "weight": 0.0,
+        "output_contribution": 0.0,
+        "reasoning": "FIU-IND Status: UNREGISTERED. Higher certainty for domestic reporting entities."
+      },
+      {
+        "step_name": "3b_hop_decay",
+        "input_value": 2,
+        "weight": -0.08,
+        "output_contribution": -8.0,
+        "reasoning": "Hop distance 2 applies mathematical confidence decay (capped at -0.20)."
+      },
+      {
+        "step_name": "3c_hot_wallet_match",
+        "input_value": "CLUSTER_HEURISTIC",
+        "weight": 0.15,
+        "output_contribution": 15.0,
+        "reasoning": "Exact hot-wallet address match vs heuristic cluster match."
+      },
+      {
+        "step_name": "3d_mixer_penalty",
+        "input_value": true,
+        "weight": -0.3,
+        "output_contribution": -30.0,
+        "reasoning": "Mixer presence introduces probabilistic barrier; heavily penalizes definitive attribution."
+      },
+      {
+        "step_name": "3e_recent_activity",
+        "input_value": "2 days ago",
+        "weight": 0.1,
+        "output_contribution": 10.0,
+        "reasoning": "Active wallet interaction within the last 7 days indicates active off-ramp cluster."
+      }
+    ],
+    "label_type": "UNRESOLVED",
+    "confidence_band": "LOW",
+    "nodal_officer_email": "compliance@unknown.com",
+    "fiu_status": "UNREGISTERED",
+    "nearest_vasp_hop": null,
+    "vasp_key": null,
+    "ranked_candidates": []
+  },
+  "typologies": [
+    "MULE_NETWORK",
+    "MIXER_BOUNDARY"
+  ],
+  "risk": {
+    "case_id": "CR-2026-MIXER-BOUND-02",
+    "risk_score": 80,
+    "risk_category": "CRITICAL",
+    "component_scores": {
+      "ofac_sanctions": 0,
+      "mixer_interaction": 30,
+      "mule_network": 20,
+      "peel_chain": 0,
+      "consolidation_funnel": 0,
+      "hop_velocity": 5,
+      "fraud_amount": 0,
+      "cross_chain_layering": 0,
+      "offshore_vasp_penalty": 15,
+      "compound_mule_rapid": 0,
+      "compound_mule_mixer": 10
+    }
+  },
+  "recovery_estimate": {
+    "case_id": "CR-2026-MIXER-BOUND-02",
+    "recovery_score": 0,
+    "action_window_hours": 0,
+    "display_tier": "ineligible",
+    "calculation_basis": "Traced value ($30.00) is below minimum actionable threshold ($120).; Attribution candidate with 'LOW' confidence or mixer interaction is invalid for recovery scoring per PRD FR-016.",
+    "disclaimer": "Heuristic Recovery Estimate is INELIGIBLE for this case due to incomplete data, low attribution confidence, or mixer boundary obstruction."
+  },
+  "boundary_events": [
+    {
+      "type": "MIXER_BOUNDARY",
+      "kind": "MIXER",
+      "name": "Tornado Cash (Router)",
+      "address": "0xd90e2f925da726b50c4ed8d0fb90ad053324f31b",
+      "hop_number": 2,
+      "deposit_amount": 29.8,
+      "asset": "ETH",
+      "why_stopped": "Fund flow beyond this point is cryptographically obfuscated. Onward addresses cannot be attributed to the depositor.",
+      "search_window_seconds": 14400
+    }
+  ],
+  "data_completeness_pct": 100.0,
+  "termination_reason": "MIXER_BOUNDARY_HIT"
+}

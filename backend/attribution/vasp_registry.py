@@ -337,3 +337,52 @@ def check_chainabuse_reports(address: str) -> Dict[str, Any]:
         "source": "Chainabuse_Free_Community",
     }
 
+
+# ── §Phase5: Standardized Geographic & FATF Metadata ──
+
+_GEO_DEFAULTS: Dict[str, Dict[str, Any]] = {
+    "WAZIRX": {"country": "IN", "geo_region": "South Asia", "geo_lat": 19.0760, "geo_lng": 72.8777, "fatf_greylist": False},
+    "COINDCX": {"country": "IN", "geo_region": "South Asia", "geo_lat": 19.0760, "geo_lng": 72.8777, "fatf_greylist": False},
+    "ZEBPAY": {"country": "IN", "geo_region": "South Asia", "geo_lat": 28.6139, "geo_lng": 77.2090, "fatf_greylist": False},
+    "BINANCE": {"country": "KY", "geo_region": "Caribbean", "geo_lat": 19.3133, "geo_lng": -81.2546, "fatf_greylist": False},
+    "KUCOIN": {"country": "SC", "geo_region": "East Africa", "geo_lat": -4.6796, "geo_lng": 55.4920, "fatf_greylist": False},
+    "BYBIT": {"country": "AE", "geo_region": "Middle East", "geo_lat": 25.2048, "geo_lng": 55.2708, "fatf_greylist": False},
+    "MUDREX": {"country": "IN", "geo_region": "South Asia", "geo_lat": 12.9716, "geo_lng": 77.5946, "fatf_greylist": False},
+    "BITBNS": {"country": "IN", "geo_region": "South Asia", "geo_lat": 12.9716, "geo_lng": 77.5946, "fatf_greylist": False},
+    "GIOTTUS": {"country": "IN", "geo_region": "South Asia", "geo_lat": 13.0827, "geo_lng": 80.2707, "fatf_greylist": False},
+    "UNOCOIN": {"country": "IN", "geo_region": "South Asia", "geo_lat": 12.9716, "geo_lng": 77.5946, "fatf_greylist": False},
+    "PI42": {"country": "IN", "geo_region": "South Asia", "geo_lat": 12.9716, "geo_lng": 77.5946, "fatf_greylist": False},
+    "COINSWITCH": {"country": "IN", "geo_region": "South Asia", "geo_lat": 12.9716, "geo_lng": 77.5946, "fatf_greylist": False},
+    "BUYUCOIN": {"country": "IN", "geo_region": "South Asia", "geo_lat": 28.5355, "geo_lng": 77.3910, "fatf_greylist": False},
+    "KOINBX": {"country": "IN", "geo_region": "South Asia", "geo_lat": 11.0168, "geo_lng": 76.9558, "fatf_greylist": False},
+    "SUNCRYPTO": {"country": "IN", "geo_region": "South Asia", "geo_lat": 26.9124, "geo_lng": 75.7873, "fatf_greylist": False},
+    "FLITPAY": {"country": "IN", "geo_region": "South Asia", "geo_lat": 26.9124, "geo_lng": 75.7873, "fatf_greylist": False},
+    "OKX": {"country": "SC", "geo_region": "East Africa", "geo_lat": -4.6796, "geo_lng": 55.4920, "fatf_greylist": False},
+    "BITGET": {"country": "SC", "geo_region": "East Africa", "geo_lat": -4.6796, "geo_lng": 55.4920, "fatf_greylist": False},
+    "MEXC": {"country": "SC", "geo_region": "East Africa", "geo_lat": -4.6796, "geo_lng": 55.4920, "fatf_greylist": False},
+    "HTX": {"country": "SC", "geo_region": "East Africa", "geo_lat": -4.6796, "geo_lng": 55.4920, "fatf_greylist": False},
+    "GATEIO": {"country": "KY", "geo_region": "Caribbean", "geo_lat": 19.3133, "geo_lng": -81.2546, "fatf_greylist": False},
+}
+
+for _vasp_k, _vasp_geo in _GEO_DEFAULTS.items():
+    if _vasp_k in VASP_REGISTRY:
+        VASP_REGISTRY[_vasp_k].update(_vasp_geo)
+
+
+def get_vasp_geo_summary() -> Dict[str, Dict[str, Any]]:
+    """
+    §Phase5: Returns standardized geographic and FIU metadata for dashboard map visualization.
+    """
+    return {
+        k: {
+            "country": v.get("country", "IN" if v.get("jurisdiction") == "INDIA" else "GLOBAL"),
+            "geo_region": v.get("geo_region", "South Asia" if v.get("jurisdiction") == "INDIA" else "Global"),
+            "lat": v.get("geo_lat", 20.5937 if v.get("jurisdiction") == "INDIA" else 0.0),
+            "lng": v.get("geo_lng", 78.9629 if v.get("jurisdiction") == "INDIA" else 0.0),
+            "fiu_status": v.get("fiu_registration_status", "UNKNOWN"),
+            "name": v.get("legal_name", k),
+            "fatf_greylist": v.get("fatf_greylist", False),
+        }
+        for k, v in VASP_REGISTRY.items()
+    }
+

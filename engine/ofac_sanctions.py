@@ -1,4 +1,4 @@
-﻿"""
+"""
 OFAC SDN Sanctions Module - TraceX / SIH 26183
 Screens cryptocurrency addresses against US OFAC Specially Designated Nationals list.
 
@@ -302,6 +302,70 @@ def _clear_result(addr, chain, now_str=None, record_hash=None, refresh_src=None)
     }
 
 
+def fuzzy_screen_ofac_entity(entity_name: str, threshold: float = 0.85) -> List[Dict[str, Any]]:
+    """
+    §Phase5: Fuzzy entity-name search against OFAC SDN registry using difflib SequenceMatcher
+    and token/substring matching.
+    Returns matched records sorted by match_ratio descending.
+    """
+    from difflib import SequenceMatcher
+    query = (entity_name or "").lower().strip()
+    if not query:
+        return []
+
+    hits: List[Dict[str, Any]] = []
+    seen_addrs = set()
+    with _OFAC_LOCK:
+        registry_copy = dict(OFAC_SDN_REGISTRY)
+
+    for addr, record in registry_copy.items():
+        if addr in seen_addrs:
+            continue
+        ent = (record.get("entity") or "").lower()
+        if not ent:
+            continue
+
+        ent_base = ent.split("(")[0].strip()
+        ratio = max(
+            SequenceMatcher(None, query, ent).ratio(),
+            SequenceMatcher(None, query, ent_base).ratio()
+        )
+        # Check sliding window of words in ent matching query word count
+        q_words = query.split()
+        ent_words = ent.split()
+        q_len = len(q_words)
+        if q_len > 0 and len(ent_words) >= q_len:
+            for i in range(len(ent_words) - q_len + 1):
+                window = " ".join(ent_words[i:i + q_len])
+                ratio = max(ratio, SequenceMatcher(None, query, window).ratio())
+
+        # Direct substring matching (e.g., query inside full entity descriptor)
+        if query in ent:
+            sub_ratio = len(query) / max(len(ent), 1)
+            ratio = max(ratio, 0.85 + 0.15 * sub_ratio)
+        elif ent in query:
+            sub_ratio = len(ent) / max(len(query), 1)
+            ratio = max(ratio, 0.85 + 0.15 * sub_ratio)
+        else:
+            # Word token overlap
+            q_set = set(q_words)
+            e_set = set(ent_words)
+            if q_set and q_set.issubset(e_set):
+                ratio = max(ratio, 0.90)
+
+        if ratio >= threshold:
+            seen_addrs.add(addr)
+            hits.append({
+                **record,
+                "address": addr,
+                "match_ratio": round(ratio, 3),
+                "query": entity_name,
+            })
+
+    hits.sort(key=lambda x: x["match_ratio"], reverse=True)
+    return hits
+
+
 # ─── US TREASURY AUTO-REFRESH ──────────────────────────────────────────────────
 
 def _fetch_ofac_from_treasury() -> int:
@@ -457,3 +521,8 @@ def start_ofac_refresh_scheduler() -> None:
 def bulk_screen_ofac(addresses: List[str], chain: Optional[str] = None) -> List[Dict[str, Any]]:
     """Screen a list of addresses against OFAC in one call. Returns list of results."""
     return [screen_ofac_sanctions(addr, chain) for addr in addresses if addr]
+
+
+def bulk_fuzzy_screen_entities(entities: List[str], threshold: float = 0.85) -> Dict[str, List[Dict[str, Any]]]:
+    """§Phase5: Screen a list of entity names using fuzzy matching against OFAC registry."""
+    return {ent: fuzzy_screen_ofac_entity(ent, threshold=threshold) for ent in entities if ent}

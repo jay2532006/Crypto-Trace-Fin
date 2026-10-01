@@ -10,6 +10,10 @@ interface KpiBannerProps {
   risk: RiskAssessment | null;
   attributionBand?: string;
   traceCoverage?: string;
+  dataCompletenessPct?: number;
+  earliestTransactionDate?: string;
+  timeWindowTruncations?: number;
+  partialResult?: boolean;
 }
 
 export function KpiBanner({
@@ -18,7 +22,11 @@ export function KpiBanner({
   recovery,
   risk,
   attributionBand = "HIGH",
-  traceCoverage = "PARTIAL"
+  traceCoverage = "PARTIAL",
+  dataCompletenessPct,
+  earliestTransactionDate,
+  timeWindowTruncations = 0,
+  partialResult = false,
 }: KpiBannerProps) {
   const recoveryValue = recovery?.eligible ? `${Math.round(recovery.recovery_score * 100)}%` : "N/A";
   const recoveryWindow = recovery?.eligible ? `${recovery.action_window_hours}h window` : "Low attribution";
@@ -46,6 +54,16 @@ export function KpiBanner({
         <TraceCell className="attribution" label="Attribution Band" value={attributionBand} detail="VASP heuristic band" />
         <TraceCell className="risk" label="Risk Assessment" value={riskValue} detail="High-risk typology" />
         <TraceCell className="coverage" label="Trace Coverage" value={traceCoverage} detail="Deterministic scope" />
+
+        {/* §8.7 — Data Completeness as first-class metric */}
+        {dataCompletenessPct !== undefined && (
+          <DataCompletenessCell
+            pct={dataCompletenessPct}
+            earliestDate={earliestTransactionDate}
+            truncations={timeWindowTruncations}
+            partial={partialResult}
+          />
+        )}
       </div>
     </section>
   );
@@ -57,6 +75,68 @@ function TraceCell({ className, label, value, detail }: { className: string; lab
       <span className="trace-label">{label}</span>
       <strong className="trace-value">{value}</strong>
       <span className="trace-subvalue">{detail}</span>
+    </div>
+  );
+}
+
+/**
+ * §8.7 — Data Completeness Cell
+ * Surfaces the composite data_completeness_pct as a progress bar with contextual warnings.
+ * Reflects: provider errors (−15% each), time-window truncation (−10% per §1.6), partial timeout (−15% per §1.7).
+ */
+function DataCompletenessCell({
+  pct,
+  earliestDate,
+  truncations,
+  partial,
+}: {
+  pct: number;
+  earliestDate?: string;
+  truncations: number;
+  partial: boolean;
+}) {
+  const rounded = Math.round(pct);
+  const barColor =
+    rounded >= 85 ? "var(--green, #22c55e)" :
+    rounded >= 65 ? "var(--amber, #f59e0b)" :
+    "var(--red, #ef4444)";
+
+  const warnings: string[] = [];
+  if (partial) warnings.push("Trace terminated early — partial hops only");
+  if (truncations > 0) warnings.push(`${truncations} time-window truncation(s) — older activity may exist`);
+  if (earliestDate) warnings.push(`Data horizon: ${earliestDate}`);
+
+  const tooltipText =
+    `We confirmed ${rounded}% of the fund flow from public blockchain data. ` +
+    (warnings.length ? warnings.join("; ") + "." : "Full data window covered.");
+
+  return (
+    <div className="trace-cell completeness" title={tooltipText} style={{ cursor: "help" }}>
+      <span className="trace-label">Data Completeness</span>
+      <strong className="trace-value" style={{ color: barColor }}>{rounded}%</strong>
+      <div
+        style={{
+          marginTop: "4px",
+          height: "4px",
+          borderRadius: "2px",
+          background: "rgba(255,255,255,0.1)",
+          overflow: "hidden",
+        }}
+        aria-label={`Data completeness: ${rounded}%`}
+      >
+        <div
+          style={{
+            width: `${Math.min(100, rounded)}%`,
+            height: "100%",
+            borderRadius: "2px",
+            background: barColor,
+            transition: "width 0.6s ease",
+          }}
+        />
+      </div>
+      <span className="trace-subvalue" style={{ color: rounded < 65 ? barColor : undefined }}>
+        {partial ? "Partial trace" : truncations > 0 ? "Window truncated" : "Blockchain-verified"}
+      </span>
     </div>
   );
 }

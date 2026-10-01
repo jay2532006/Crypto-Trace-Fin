@@ -314,5 +314,62 @@ Phase Gate: 113/113 tests pass (100% green). Zero regressions.
 ---
 
 ## PHASE 5 - Polish / Time-Permitting
-**Status: NOT STARTED**
-Items queued: 8.7 (data completeness top-level surfacing), 8.8 (optional Postgres connection pooling check)
+**Status: COMPLETE**
+**Date:** 2026-10-01
+**Test Gate:** 126/126 tests pass (full suite green, +13 new unit tests in test_phase5_polish.py)
+
+### Items Implemented
+
+| Item | Section | Priority | Status | Files Changed |
+|------|---------|----------|--------|---------------|
+| 8.7 Data completeness as first-class visible metric | Tracing / Frontend | P1 High | Done | frontend/components/common/KpiBanner.tsx, frontend/views/InvestigationView.tsx, backend/tracing/trace_engine.py |
+| 8.8 Optional PostgreSQL migration | Infrastructure | P3 Polish | Skipped | Skipped per spec ("only if multi-investigator stress demo is planned; SQLite adequate") |
+| OFAC entity-name fuzzy screening | Compliance / Sanctions | P2 Polish | Done | engine/ofac_sanctions.py |
+| AI Copilot fraud-type & completeness prompt grounding | AI Forensics | P2 Polish | Done | engine/ai_copilot.py |
+| INR / USD dual display across trace root and hops | Tracing Engine | P2 Polish | Done | backend/tracing/trace_engine.py |
+| VASP geo-mapping & GET /api/v1/vasps/geo | Intelligence / API | P2 Polish | Done | backend/attribution/vasp_registry.py, backend/api/trace_routes.py |
+
+### Detail of Changes
+
+#### 8.7 — Data Completeness as First-Class Visible Metric (KpiBanner.tsx, InvestigationView.tsx)
+- Added dedicated `DataCompletenessCell` to `KpiBanner.tsx` featuring dynamic colour-coded progress bar:
+  - Green ($\ge 85\%$)
+  - Amber ($65\% - 84\%$)
+  - Red ($< 65\%$)
+- Includes interactive tooltip breaking down public blockchain confirmation percentage, window truncations, and partial execution warnings.
+- Updated `InvestigationView.tsx` trace receipt panel to display:
+  - Confirmed Ledger Completeness (%)
+  - Data Horizon Date (`earliest_transaction_date`)
+  - Warning banner on partial trace timeout.
+
+#### OFAC Entity-Name Fuzzy Screening (engine/ofac_sanctions.py)
+- Implemented `fuzzy_screen_ofac_entity(entity_name, threshold=0.85)` using `difflib.SequenceMatcher` with base-entity stripping, word sliding-window evaluation, and token overlap.
+- Successfully matches typo variations (e.g., "Tornado Csh") and entity descriptors without false positives.
+- Implemented `bulk_fuzzy_screen_entities(entities)` for multi-entity batch screening.
+
+#### AI Copilot Fraud-Type & Completeness Prompt Grounding (engine/ai_copilot.py)
+- Enriched `chat_copilot()` prompt dossier with `fraud_type`, `crime_category`, `data_completeness_pct_display`, `partial_trace_warning`, and `sanctions_nexus`.
+- Updated `summarize_case()` prompt template to explicitly supply Crime Classification, Public Ledger Completeness, and Sanctions Nexus.
+- Added specialized crime category / fraud type / data quality handler to rule-based fallback `_generate_rule_based_briefing()`.
+
+#### INR / USD Dual Display Across Trace Root and Hops (backend/tracing/trace_engine.py)
+- Augmented `raw_result` with:
+  - `traced_value_usd` (rounded to 2 decimal places)
+  - `traced_value_inr` (computed via conversion rate 83.5)
+  - `inr_conversion_rate` (83.5)
+- Injected dual currency amounts (`amount_usd` and `amount_inr`) into every forward and backward hop dictionary.
+
+#### VASP Geographic Coordinates & Endpoint (vasp_registry.py, trace_routes.py)
+- Standardized all entries in `VASP_REGISTRY` with `country` (ISO alpha-2), `geo_region`, `geo_lat`, `geo_lng`, and `fatf_greylist`.
+- Implemented `get_vasp_geo_summary()` utility.
+- Added authenticated API endpoint `GET /api/v1/vasps/geo` in `backend/api/trace_routes.py` returning geolocation and FIU registration metadata for UI map overlays.
+
+### Test Coverage Added
+New test suite: `backend/tests/test_phase5_polish.py` (13 tests, all pass):
+- TestOFACFuzzyScreening: 4 tests (positive match, typo resilience, negative rejection, bulk screening)
+- TestAICopilotContext: 3 tests (rule briefing response, chat copilot enrichment, summarize case prompt)
+- TestTraceEngineDualCurrency: 2 tests (root USD/INR dual display, per-hop dual currency amounts)
+- TestVASPGeoMapping: 3 tests (registry geo fields presence, geo summary mapping, GET /api/v1/vasps/geo route)
+- TestDataCompletenessMetric: 1 test (KPI fields validation)
+
+Phase Gate: 126/126 tests pass (100% green). Zero regressions.

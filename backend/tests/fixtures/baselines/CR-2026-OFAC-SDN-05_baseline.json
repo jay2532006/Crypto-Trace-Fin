@@ -1,0 +1,123 @@
+{
+  "case_id": "CR-2026-OFAC-SDN-05",
+  "hops": [
+    {
+      "hop_number": 1,
+      "from_address": "0x71c7656ec7ab88b098defb751b7401b5f6d8976f",
+      "to_address": "0x098b716b8aaf21512996dc57eb0615e2383e2f96",
+      "amount": 125.0,
+      "asset": "ETH",
+      "chain": "ETH",
+      "tx_hash": "0xsimulated_ofac_tx_1",
+      "timestamp_epoch": 1790824034,
+      "type": "sanctioned_address",
+      "node_type": "sanctioned_address",
+      "ofac_hit": true,
+      "amount_usd": 125.0,
+      "amount_inr": 10437.5
+    }
+  ],
+  "attribution": {
+    "vasp_name": null,
+    "vasp_id": "VASP-UNKNOWN",
+    "score": 95,
+    "score_components": {
+      "a_jurisdiction": 0.0,
+      "b_hop_decay": -0.0,
+      "c_hot_wallet_match": 0.15,
+      "d_mixer_penalty": 0.0,
+      "e_recent_activity": 0.1
+    },
+    "policy_version": "policy_v1_india_kyc",
+    "scoring_steps": [
+      {
+        "step_name": "1_load_policy",
+        "input_value": "policy_v1_india_kyc",
+        "weight": 0.5,
+        "output_contribution": 25.0,
+        "reasoning": "Loaded active jurisdiction policy: policy_v1_india_kyc"
+      },
+      {
+        "step_name": "2_single_hop_override",
+        "input_value": true,
+        "weight": 0.2,
+        "output_contribution": 20.0,
+        "reasoning": "Direct 1-hop deposit to VASP hot wallet eliminates intermediary uncertainty."
+      },
+      {
+        "step_name": "3a_exchange_jurisdiction",
+        "input_value": "UNKNOWN",
+        "weight": 0.0,
+        "output_contribution": 0.0,
+        "reasoning": "FIU-IND Status: UNREGISTERED. Higher certainty for domestic reporting entities."
+      },
+      {
+        "step_name": "3b_hop_decay",
+        "input_value": 1,
+        "weight": -0.0,
+        "output_contribution": -0.0,
+        "reasoning": "Hop distance 1 applies mathematical confidence decay (capped at -0.20)."
+      },
+      {
+        "step_name": "3c_hot_wallet_match",
+        "input_value": "CLUSTER_HEURISTIC",
+        "weight": 0.15,
+        "output_contribution": 15.0,
+        "reasoning": "Exact hot-wallet address match vs heuristic cluster match."
+      },
+      {
+        "step_name": "3d_mixer_penalty",
+        "input_value": false,
+        "weight": 0.0,
+        "output_contribution": 0.0,
+        "reasoning": "No mixer interaction detected along trace corridor."
+      },
+      {
+        "step_name": "3e_recent_activity",
+        "input_value": "2 days ago",
+        "weight": 0.1,
+        "output_contribution": 10.0,
+        "reasoning": "Active wallet interaction within the last 7 days indicates active off-ramp cluster."
+      }
+    ],
+    "label_type": "UNRESOLVED",
+    "confidence_band": "HIGH",
+    "nodal_officer_email": "compliance@unknown.com",
+    "fiu_status": "UNREGISTERED",
+    "nearest_vasp_hop": null,
+    "vasp_key": null,
+    "ranked_candidates": []
+  },
+  "typologies": [
+    "OFAC_SANCTION"
+  ],
+  "risk": {
+    "case_id": "CR-2026-OFAC-SDN-05",
+    "risk_score": 85,
+    "risk_category": "CRITICAL",
+    "component_scores": {
+      "ofac_sanctions": 45,
+      "mixer_interaction": 0,
+      "mule_network": 0,
+      "peel_chain": 0,
+      "consolidation_funnel": 0,
+      "hop_velocity": 5,
+      "fraud_amount": 0,
+      "cross_chain_layering": 0,
+      "offshore_vasp_penalty": 15,
+      "compound_mule_rapid": 0,
+      "compound_mule_mixer": 0
+    }
+  },
+  "recovery_estimate": {
+    "case_id": "CR-2026-OFAC-SDN-05",
+    "recovery_score": 85,
+    "action_window_hours": 35,
+    "display_tier": "eligible",
+    "calculation_basis": "Eligible Case: Traced $125.00 USD (1 hops). VASP Cooperation Factor: 20/35. Time Urgency Factor: 30/30 (1.0h elapsed). Path Simplicity: 25/25.",
+    "disclaimer": "Heuristic Recovery Estimate is an operational urgency indicator based on path complexity, elapsed time, and exchange cooperation. It is not a statistical probability or legal guarantee."
+  },
+  "boundary_events": [],
+  "data_completeness_pct": 100.0,
+  "termination_reason": "COMPLETE"
+}

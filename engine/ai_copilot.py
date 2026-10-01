@@ -238,6 +238,11 @@ def _generate_rule_based_briefing(prompt: str) -> str:
     dep = dep_match.group(1) if dep_match else "0x28C6c06298d514Db089934071355E5743bf21d60"
     email = email_match.group(1) if email_match else "compliance@binance.com"
 
+    fraud_match = re.search(r'"(?:fraud_type|crime_category)":\s*"([^"]+)"', prompt) or re.search(r'(?:Crime|Fraud)(?: Classification| Category| Type)?:\s*([^\n\r]+)', prompt)
+    fraud = fraud_match.group(1).strip() if fraud_match else "Cryptocurrency Cyber Fraud"
+    comp_match = re.search(r'"data_completeness_pct":\s*([0-9.]+)', prompt) or re.search(r'Public Ledger Completeness:\s*([0-9.]+)%', prompt)
+    data_comp = comp_match.group(1).strip() if comp_match else "100"
+
     is_hindi = any(w in query for w in ["kaun", "kaunse", "kis", "kaha", "kahan", "kitna", "kitne", "paisa", "paise", "karein", "karo", "batao", "gaye", "chori", "hua", "hai", "kya"])
 
     # 1. Exchange / VASP queries
@@ -337,6 +342,25 @@ Cryptographically reconstructed transaction path across **{hops} Sequential Hops
 
 No unlinked mixing breaks detected; the cryptographic chain of custody remains fully preserved."""
 
+    # §Phase5: Crime category / Fraud type / Completeness queries
+    elif any(k in query for k in ["crime", "fraud", "category", "type", "modus", "completeness", "truncate", "data quality", "ransomware", "phishing"]):
+        if is_hindi:
+            return f"""### 🛡️ Crime Category & Data Completeness Analysis
+* **Aparadh Prakar (Crime Type):** **{fraud}**
+* **Data Purnata (Completeness):** **{data_comp}%** confirmed public ledger trace
+* **Target VASP:** **{vasp}** (`{dep}`)
+* **Valuation:** **{val}**
+
+**Forensic Guidance:** {fraud} mamle me tatkal Section 106 BNSS freeze notice {email} ko bhejna anivarya hai."""
+        else:
+            return f"""### 🛡️ Crime Classification & Ledger Completeness
+* **Offense / Fraud Category:** **{fraud}**
+* **Public Ledger Completeness:** **{data_comp}%** verified on-chain evidence
+* **Terminal Destination:** **{vasp}** (`{dep}`) [Confidence: **{conf}%**]
+* **Total Exposure:** **{val}**
+
+**Investigative Guidance:** For {fraud} investigations, immediate Section 91 & Section 106 BNSS notices should be dispatched to `{email}`."""
+
     # 5. Action / Freezing / Legal queries
     elif any(k in query for k in ["action", "freeze", "rokna", "rokne", "kya karein", "kya kare", "kya karna", "section 91", "section 106", "bnss", "notice", "fir"]):
         if is_hindi:
@@ -395,11 +419,20 @@ def summarize_case(trace_data: Dict[str, Any]) -> Dict[str, Any]:
     if conf < 65:
         vasp_name = "UNKNOWN — MANUAL REVIEW"
 
+    fraud_type = trace_data.get("fraud_type") or trace_data.get("crime_category", "Cryptocurrency Cyber Fraud")
+    data_comp = trace_data.get("data_completeness_pct", 100)
+    time_truncs = trace_data.get("time_window_truncations", 0)
+    is_partial = trace_data.get("partial_result", False)
+    ofac_info = trace_data.get("ofac_details") or ("OFAC HIT" if trace_data.get("ofac_sanction_hit") else "CLEAR")
+
     prompt = f"""Summarize the cryptocurrency fund flow for Investigating Officers based STRICTLY on this verified trace:
 
 CASE EVIDENCE:
 - Suspect Address: {suspect}
 - Blockchain: {chain}
+- Crime / Fraud Classification: {fraud_type}
+- Public Ledger Completeness: {data_comp}% (Time Window Truncations: {time_truncs}, Partial Trace: {is_partial})
+- Sanctions / OFAC Nexus: {json.dumps(ofac_info) if isinstance(ofac_info, list) else ofac_info}
 - Total Sequential Hops: {ps.get('total_hops', 0)}
 - Initial Outflow: {ps.get('origin_amount', 'N/A')}
 - Final Deposit Amount: {ps.get('final_deposit_amount', 'N/A')} (Dissipated: {ps.get('amount_dissipated_pct', 0)}%)
@@ -555,6 +588,22 @@ def chat_copilot(query: str, trace_data: Optional[Dict[str, Any]] = None, histor
                 }
         except Exception:
             pass
+
+    if trace_data:
+        # §Phase5: enrich trace_data with fraud-type and completeness context for LLM grounding
+        if "data_completeness_pct" in trace_data:
+            trace_data.setdefault("data_completeness_pct_display", f"{trace_data.get('data_completeness_pct', 100):.1f}%")
+        if "partial_result" in trace_data:
+            trace_data.setdefault("partial_trace_warning", trace_data.get("partial_result", False))
+        if "time_window_truncations" in trace_data:
+            trace_data.setdefault("time_window_note", f"{trace_data.get('time_window_truncations', 0)} time-window truncation(s)" if trace_data.get("time_window_truncations") else None)
+        if "fraud_type" in trace_data:
+            trace_data.setdefault("crime_category", trace_data.get("fraud_type"))
+        elif "crime_type" in trace_data:
+            trace_data.setdefault("fraud_type", trace_data.get("crime_type"))
+            trace_data.setdefault("crime_category", trace_data.get("crime_type"))
+        if "ofac_sanction_hit" in trace_data or "ofac_details" in trace_data:
+            trace_data.setdefault("sanctions_nexus", "CRITICAL OFAC HIT" if trace_data.get("ofac_sanction_hit") else "CLEAR")
 
     context_str = json.dumps(trace_data or {}, indent=2)
 
